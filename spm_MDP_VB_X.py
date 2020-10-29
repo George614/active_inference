@@ -74,7 +74,7 @@ def spm_MDP_G(A, x):
     '''
     # probability distribution over the hidden causes: i.e., Q(x)
     qx = np.asarray(x)
-    # accumulate expexctation of entropy. i.e., E[lnP(o|x)]
+    # accumulate expexctation of uncertainty / entropy. i.e., E[lnP(o|x)]
     # i.e. Expected Ambiguity
     G = 0
     qo = 0
@@ -144,9 +144,9 @@ def spm_MDP_VB_X(MDP, options=None):
     
     ### parameters of generative model and polices ###
     # likelihood model (for a POMDP implicit in G)
-    p0 = np.exp(-16)
+    p0 = np.exp(-16)    # epsilon value to avoid numerical error
     MDP['A'] = spm_norm(MDP['A'])
-    # parameters (concentration parameters): A (later/optional development)
+    # parameters (concentration parameters): A (later development for learning it)
     A = MDP['A']
     # transition probabilities (priors)
     sB = np.zeros_like(MDP['B'])
@@ -154,9 +154,9 @@ def spm_MDP_VB_X(MDP, options=None):
     for j in range(Nu):
         # controlable transition probabilities
         MDP['B'][:,:,j] = spm_norm(MDP['B'][:,:,j])
-        # parameters (concentration parameters): B (later/optional development)
-        sB[:,:,j] = spm_norm(MDP['B'][:,:,j] + p0)
-        rB[:,:,j] = spm_norm(MDP['B'][:,:,j].T + p0)
+        # parameters (concentration parameters): B (later development for learning it)
+        sB[:,:,j] = spm_norm(MDP['B'][:,:,j] + p0)      # s_t   -> s_t+1
+        rB[:,:,j] = spm_norm(MDP['B'][:,:,j].T + p0)    # s_t+1 -> s_t 
     # priors over initial hidden states - concentration parameters
     if 'd' in MDP:
         D = spm_norm(MDP['d'])
@@ -211,10 +211,10 @@ def spm_MDP_VB_X(MDP, options=None):
     for k in range(Np):
         x[:, 0, k] = D.squeeze()
     # initialize posteriors over policies and action
-    P  = np.zeros((Nu, T-1))
-    wn = np.zeros((T*Ni,))
-    un = np.zeros((Np, T*Ni))
-    u  = np.zeros((Np, T))
+    P  = np.zeros((Nu, T-1))                 # probability of action at time 1,...,T - 1
+    wn = np.zeros((T*Ni,))                   # simulated neuronal encoding of precision
+    un = np.zeros((Np, T*Ni))                # simulated neuronal encoding of policies
+    u  = np.zeros((Np, T))                   # conditional expectations over policies
     a  = np.zeros((T-1,), dtype=np.int)      # action at 1,...,T-1
     # expected rate parameter (precisions? need to figure out)
     p = np.arange(Np, dtype=np.int)          # allowable policies
@@ -224,25 +224,25 @@ def spm_MDP_VB_X(MDP, options=None):
     #### solve ####
     s = np.zeros((T,), dtype=np.int) - 1     # states (initialized to be invalid)
     o = np.zeros((T,), dtype=np.int) - 1     # outcomes (initialized to be invalid)
-    O = [None] * T
+    O = [None] * T                           # vector representation of outcomes
     for t in range(T):
         ## generate true states and outcomes
         # sampled state - based on previous action
         if t==0:
-            s[t] = MDP['s']
+            s[t] = MDP['s']                  # read initial state from MDP strcture
         else:
             if t > 0:
-                ps = MDP['B'][:, s[t-1], a[t-1]]
+                ps = MDP['B'][:, s[t-1], a[t-1]] # probability of sampled states
             else:
                 ps = spm_norm(MDP['D'])
-            s[t] = np.where(np.random.rand() < np.cumsum(ps))[0][0]
+            s[t] = np.where(np.random.rand() < np.cumsum(ps))[0][0] # sampled state
         # sample outcome from true state if not specified
         try:
             o[t] = MDP['o'][t]
         except:
             po = MDP['A'][:, s[t]]
             o[t] = np.where(np.random.rand() < np.cumsum(po))[0][0]
-        # posterior predictive density (prior for subordinate level)
+        # posterior predictive density over states (prior for subordinate level)
         if t>0:
             xq = sB[:, :, a[t-1]] @ X[:, t-1] #TODO debug this line!
         else:
@@ -258,7 +258,7 @@ def spm_MDP_VB_X(MDP, options=None):
         ## variational updates (hidden states) under sequential policies
         S = np.size(V, 0) + 1    # time steps
         F = np.zeros((Np, 1))    # free energy
-        G = np.zeros((Np, 1))    # 
+        G = np.zeros((Np, 1))    # expected free energy
         for k in p:
             dF = 1
             for i in range(Ni):
@@ -267,7 +267,7 @@ def spm_MDP_VB_X(MDP, options=None):
                     # marginal likelihood over outcome factors
                     if j<=t:
                         xq = np.expand_dims(x[:, j, k], axis=-1)
-                        Ao = spm_dot(A, O[j])
+                        Ao = spm_dot(A, O[j])    # outcome map to state
                     # hidden states for this time and policy
                     sx = np.expand_dims(x[:, j, k], axis=-1)
                     v  = np.zeros_like(sx) #TODO  spm_zeros()
@@ -288,7 +288,7 @@ def spm_MDP_VB_X(MDP, options=None):
                         # (negative) expected free energy
                         F[k] = F[k] + sx.T @ v
                         # update
-                        sx = spm_softmax(qx + v/tau)
+                        sx = spm_softmax(qx + v/tau) # what is tau?
                     else:
                         F[k] = G[k]
                     # store update neuronal activity
@@ -305,7 +305,7 @@ def spm_MDP_VB_X(MDP, options=None):
         for k in p:  # number of policies
             for j in range(S):  # number of time steps 
                 # get expected states for this policy and time step
-                xq= x[:, j, k:k+1]
+                xq = x[:, j, k:k+1]
                 ## (negative) expected free energy
                 # Bayesian suprise about states
                 if ambiguity:
