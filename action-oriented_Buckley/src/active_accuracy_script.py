@@ -2,7 +2,8 @@ import numpy as np
 import sys
 import os
 
-sys.path.append(os.getcwd() + '/..')
+# sys.path.append(os.getcwd() + '/src')
+
 import core
 from core.config import *
 

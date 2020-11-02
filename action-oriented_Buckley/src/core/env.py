@@ -62,10 +62,13 @@ class Environment(object):
 
     def act(self, a):
         ''' Run or tumble then observe (calculate gradient) '''
+        
         # if a == RUN and self.distance() > self.source_size:
-        dis1, dis2 = self.distance()
+        dis1, dis2 = self.distance() # distance between front and back and the gradient center
+
+        # Run and check bounds, or tumble.
         if a == RUN and dis1 > self.source_size and dis2 > self.source_size:
-            self.pos[0] += self.vel * np.cos(self.theta) # add store the history of positions of agent
+            self.pos[0] += self.vel * np.cos(self.theta) # update position.  NOT stored in a history.
             self.pos[1] += self.vel * np.sin(self.theta)
             self.check_bounds()
         elif a == TUMBLE:

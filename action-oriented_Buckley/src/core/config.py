@@ -58,53 +58,53 @@ LR = 0.005
 #       File config          #
 ##############################
 
-DISTANCE_PATH = "../data/distance.npy"
-ACCURACY_PATH = "../data/accuracy.npy"
-STEPS_PATH = "../data/steps.npy"
+DISTANCE_PATH = "src/data/distance.npy"
+ACCURACY_PATH = "src/data/accuracy.npy"
+STEPS_PATH = "src/data/steps.npy"
 
-STATES_PATH = "../data/states.npy"
-REVERSED_STATES_PATH = "../data/reversed_states.npy"
-COMPLEXITY_PATH = "../data/complexity.npy"
-REVERSED_COMPLEXITY_PATH = "../data/reversed_complexity.npy"
+STATES_PATH = "src/data/states.npy"
+REVERSED_STATES_PATH = "src/data/reversed_states.npy"
+COMPLEXITY_PATH = "src/data/complexity.npy"
+REVERSED_COMPLEXITY_PATH = "src/data/reversed_complexity.npy"
 
-ACTIVE_ACCURACY_PATH = "../data/active_accuracy.npy"
-PASSIVE_ACCURACY_PATH = "../data/passive_accuracy.npy"
+ACTIVE_ACCURACY_PATH = "src/data/active_accuracy.npy"
+PASSIVE_ACCURACY_PATH = "src/data/passive_accuracy.npy"
 
-PRUNED_PATH = "../data/pruned.npy"
+PRUNED_PATH = "src/data/pruned.npy"
 
-FAILED_PATH = "../data/failed.npy"
+FAILED_PATH = "src/data/failed.npy"
 
 ##############################
 #       Figures config       #
 ##############################
 
-DISTANCE = "../figs/distance.pdf"
-ACCURACY = "../figs/accuracy.pdf"
+DISTANCE = "src/figs/distance.pdf"
+ACCURACY = "src/figs/accuracy.pdf"
 
-FULL_STATES = "../figs/full_states.pdf"
-INST_STATES = "../figs/inst_states.pdf"
-EPIS_STATES = "../figs/epis_states.pdf"
-RAND_STATES = "../figs/rand_states.pdf"
-COLOR_BAR = "../figs/color_bar.pdf"
+FULL_STATES = "src/figs/full_states.pdf"
+INST_STATES = "src/figs/inst_states.pdf"
+EPIS_STATES = "src/figs/epis_states.pdf"
+RAND_STATES = "src/figs/rand_states.pdf"
+COLOR_BAR = "src/figs/color_bar.pdf"
 
-FULL_STATES_REVERSED = "../figs/full_states_reversed.pdf"
-INST_STATES_REVERSED = "../figs/inst_states_reversed.pdf"
-EPIS_STATES_REVERSED = "../figs/epis_states_reversed.pdf"
-RAND_STATES_REVERSED = "../figs/rand_states_reversed.pdf"
+FULL_STATES_REVERSED = "src/figs/full_states_reversed.pdf"
+INST_STATES_REVERSED = "src/figs/inst_states_reversed.pdf"
+EPIS_STATES_REVERSED = "src/figs/epis_states_reversed.pdf"
+RAND_STATES_REVERSED = "src/figs/rand_states_reversed.pdf"
 
-FULL_PRUNED = "../figs/full_pruned.pdf"
-INST_PRUNED = "../figs/inst_pruned.pdf"
-EPIS_PRUNED = "../figs/epis_pruned.pdf"
-RAND_PRUNED = "../figs/rand_pruned.pdf"
-COLOR_BAR_PRUNED = "../figs/color_bar_pruned.pdf"
-TOTAL_PRUNED = "../figs/total_pruned.pdf"
+FULL_PRUNED = "src/figs/full_pruned.pdf"
+INST_PRUNED = "src/figs/inst_pruned.pdf"
+EPIS_PRUNED = "src/figs/epis_pruned.pdf"
+RAND_PRUNED = "src/figs/rand_pruned.pdf"
+COLOR_BAR_PRUNED = "src/figs/color_bar_pruned.pdf"
+TOTAL_PRUNED = "src/figs/total_pruned.pdf"
 
-COMPLEXITY = "../figs/complexity.pdf"
-REVERSED_COMPLEXITY = "../figs/reversed_complexity.pdf"
+COMPLEXITY = "src/figs/complexity.pdf"
+REVERSED_COMPLEXITY = "src/figs/reversed_complexity.pdf"
 
-ACTIVE_ACCURACY = "../figs/active_accuracy.pdf"
+ACTIVE_ACCURACY = "src/figs/active_accuracy.pdf"
 
-FAILED_MODELS = "../figs/failed_models.pdf"
+FAILED_MODELS = "src/figs/failed_models.pdf"
 
 
 ##############################
