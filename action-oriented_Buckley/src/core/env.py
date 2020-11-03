@@ -50,21 +50,21 @@ class Environment(object):
         else:
             o = POS_GRADIENT
         ### added new calculation for s1 and s2 ###
-        f1_dis = self.dis(fx, fy, self.s1_pos[0], self.s1_pos[1])
-        f2_dis = self.dis(fx, fy, self.s2_pos[0], self.s2_pos[1])
-        b1_dis = self.dis(self.pos[0], self.pos[1], self.s1_pos[0], self.s1_pos[1])
-        b2_dis = self.dis(self.pos[0], self.pos[1], self.s2_pos[0], self.s2_pos[1])
-        if f1_dis > b1_dis and f2_dis > b2_dis:
-            o = NEG_GRADIENT
-        else:
-            o = POS_GRADIENT
+        # f1_dis = self.dis(fx, fy, self.s1_pos[0], self.s1_pos[1])
+        # f2_dis = self.dis(fx, fy, self.s2_pos[0], self.s2_pos[1])
+        # b1_dis = self.dis(self.pos[0], self.pos[1], self.s1_pos[0], self.s1_pos[1])
+        # b2_dis = self.dis(self.pos[0], self.pos[1], self.s2_pos[0], self.s2_pos[1])
+        # if f1_dis > b1_dis and f2_dis > b2_dis:
+        #     o = NEG_GRADIENT
+        # else:
+        #     o = POS_GRADIENT
         return o
 
     def act(self, a):
         ''' Run or tumble then observe (calculate gradient) '''
-        # if a == RUN and self.distance() > self.source_size:
-        dis1, dis2 = self.distance()
-        if a == RUN and dis1 > self.source_size and dis2 > self.source_size:
+        if a == RUN and self.distance() > self.source_size:
+        # dis1, dis2 = self.distance()
+        # if a == RUN and dis1 > self.source_size and dis2 > self.source_size:
             self.pos[0] += self.vel * np.cos(self.theta) # add store the history of positions of agent
             self.pos[1] += self.vel * np.sin(self.theta)
             self.check_bounds()
@@ -75,10 +75,10 @@ class Environment(object):
 
     def distance(self):
         ''' Distance between the agent and the source '''
-        # return self.dis(self.pos[0], self.pos[1], self.s_pos[0], self.s_pos[1])
-        dis1 = self.dis(self.pos[0], self.pos[1], self.s1_pos[0], self.s1_pos[1])
-        dis2 = self.dis(self.pos[0], self.pos[1], self.s2_pos[0], self.s2_pos[1])
-        return dis1, dis2
+        return self.dis(self.pos[0], self.pos[1], self.s_pos[0], self.s_pos[1])
+        # dis1 = self.dis(self.pos[0], self.pos[1], self.s1_pos[0], self.s1_pos[1])
+        # dis2 = self.dis(self.pos[0], self.pos[1], self.s2_pos[0], self.s2_pos[1])
+        # return dis1, dis2
 
 
     def check_bounds(self):

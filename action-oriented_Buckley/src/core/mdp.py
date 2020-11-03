@@ -39,6 +39,8 @@ class MDP(object):
         self.sQ = np.zeros([self.Ns, 1])
         self.uQ = np.zeros([self.Nu, 1])
         self.EFE = np.zeros([self.Nu, 1])
+        self.utility = np.zeros([self.Nu, 1])
+        self.surprise = np.zeros([self.Nu, 1])
 
         self.action_range = np.arange(0, self.Nu)
         self.obv = 0
@@ -81,6 +83,9 @@ class MDP(object):
             # parameter epistemic value, equation 15 and 18
             surprise = self.bayesian_surprise(u, fs) * self.beta
 
+            self.utility[u] = utility
+            self.surprise[u] = surprise
+
             # equation 15 and 18
             self.EFE[u] -= utility
             self.EFE[u] += surprise
@@ -89,7 +94,7 @@ class MDP(object):
     def infer_uq(self):
         self.uQ = self.softmax(self.EFE)
 
-    # equation 12? 
+    # equation 12? learning of the agent
     def update(self, action, new, previous):
         self.Ba[action, new, previous] += self.lr  # equation 13
         b = np.copy(self.Ba[action])

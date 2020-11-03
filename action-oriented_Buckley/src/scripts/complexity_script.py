@@ -7,7 +7,8 @@ import core
 from core.config import *
 
 
-def get_factor_complexity(a, b):
+# calculate KL-divergence between 2 transition matrices
+def get_factor_complexity(a, b): 
     kls = np.zeros(4)
     kls[TUMBLE_NEG_ID] = np.sum(a[0, :, 0] * np.log(a[0, :, 0] / b[0, :, 0]), axis=0)
     kls[TUMBLE_POS_ID] = np.sum(a[0, :, 1] * np.log(a[0, :, 1] / b[0, :, 1]), axis=0)
@@ -16,10 +17,11 @@ def get_factor_complexity(a, b):
     return kls
 
 
+# KL-divergence between initialized model and fully-learned model
 def process_agent(agent, reverse_prior=False):
     mdp = core.get_mdp(agent, reverse_prior=reverse_prior)
-    original_model = np.copy(mdp.B)
-    mdp = core.learn_trial(mdp, TEST_TRIAL_LEN)
+    original_model = np.copy(mdp.B)  # model with basic initialization
+    mdp = core.learn_trial(mdp, TEST_TRIAL_LEN)  # learn a model for extended period of time
     return get_factor_complexity(original_model, mdp.B)
 
 
