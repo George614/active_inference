@@ -1,0 +1,4 @@
+{
+    "python.pythonPath": "/opt/anaconda3/envs/DLC_1/bin/python",
+    "python.dataScience.jupyterServerURI": "local"
+}

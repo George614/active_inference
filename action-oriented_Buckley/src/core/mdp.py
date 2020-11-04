@@ -44,6 +44,9 @@ class MDP(object):
         self.obv = 0
         self.action = 0
 
+
+
+
     def reset(self, obv):
         self.obv = obv
         likelihood = self.lnA[obv, :]
