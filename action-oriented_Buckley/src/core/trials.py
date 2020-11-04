@@ -1,7 +1,7 @@
 import numpy as np
 from .env import Environment
 from .config import *
-
+import copy
 
 def learn_trial(mdp, n_steps, record_states=False):
     env = Environment()
@@ -22,8 +22,9 @@ def learn_trial(mdp, n_steps, record_states=False):
     return mdp
 
 
-def learn_record_trial(mdp, n_steps, record_states=True):
-    env = Environment()
+def learn_record_trial(mdp, n_steps, env=None, record_states=True):
+    if env is None:
+        env = Environment()
     obv = env.observe()
     mdp.reset(obv)
     # record the distribution of states
@@ -61,6 +62,14 @@ def learn_record_trial(mdp, n_steps, record_states=True):
 
     return mdp, record_dict
 
+
+def compare_agents(mdp1, mdp2, n_steps, record_states=False):
+    env1 = Environment()
+    env2 = copy.deepcopy(env1)
+    mdp1, record_dict1 = learn_record_trial(mdp1, n_steps, env=env1, record_states=record_states)
+    mdp2, record_dict2 = learn_record_trial(mdp2, n_steps, env=env2, record_states=record_states)
+    
+    return mdp1, mdp2, record_dict1, record_dict2
 
 def test_distance(mdp, steps):
     env = Environment()
