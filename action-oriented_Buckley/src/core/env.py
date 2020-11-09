@@ -10,6 +10,7 @@ class Environment(object):
         source_size=SOURCE_SIZE,
         agent_size=AGENT_SIZE,
         velocity=VELOCITY,
+        granularity=GRANULARITY,
     ):
 
         self.env_size = env_size
@@ -17,6 +18,7 @@ class Environment(object):
         self.source_size = source_size
         self.agent_size = agent_size
         self.vel = velocity
+        self.granularity = granularity
 
         self.pos = None
         self.s_pos = None
@@ -37,41 +39,33 @@ class Environment(object):
         self.s1_pos = [self.env_size / 3, self.env_size / 2] # source 1 position
         self.s2_pos = [self.env_size * 2/3 , self.env_size / 2] # source 2 position
         self.theta = np.random.rand() * (2 * np.pi)  # orientation of the agent
-        self.observe()
+        self.observe(self.pos)
 
-    def observe(self):
-        ''' Calcuate the chemical gradient '''
-        fx = self.pos[0] + (self.agent_size * np.cos(self.theta)) # fx, fy are front end position
-        fy = self.pos[1] + (self.agent_size * np.sin(self.theta))
-        f_dis = self.dis(fx, fy, self.s_pos[0], self.s_pos[1])  # front end to source distance 
-        b_dis = self.dis(self.pos[0], self.pos[1], self.s_pos[0], self.s_pos[1])  # back end to source distance
-        if f_dis > b_dis:
-            o = NEG_GRADIENT
+    def observe(self, prev_pos):
+        ''' Calcuate the change of distance '''
+        prev_dis = self.dis(prev_pos[0], prev_pos[1], self.s_pos[0], self.s_pos[1])  # 
+        cur_dis = self.dis(self.pos[0], self.pos[1], self.s_pos[0], self.s_pos[1])  # 
+        if prev_dis > cur_dis:
+            o = CHANGE_CLOSER
+        elif prev_dis < cur_dis:
+            o = CHANGE_FARTHER
         else:
-            o = POS_GRADIENT
-        ### added new calculation for s1 and s2 ###
-        # f1_dis = self.dis(fx, fy, self.s1_pos[0], self.s1_pos[1])
-        # f2_dis = self.dis(fx, fy, self.s2_pos[0], self.s2_pos[1])
-        # b1_dis = self.dis(self.pos[0], self.pos[1], self.s1_pos[0], self.s1_pos[1])
-        # b2_dis = self.dis(self.pos[0], self.pos[1], self.s2_pos[0], self.s2_pos[1])
-        # if f1_dis > b1_dis and f2_dis > b2_dis:
-        #     o = NEG_GRADIENT
-        # else:
-        #     o = POS_GRADIENT
+            o = CHANGE_NONE
         return o
 
     def act(self, a):
-        ''' Run or tumble then observe (calculate gradient) '''
-        if a == RUN and self.distance() > self.source_size:
-        # dis1, dis2 = self.distance()
-        # if a == RUN and dis1 > self.source_size and dis2 > self.source_size:
-            self.pos[0] += self.vel * np.cos(self.theta) # add store the history of positions of agent
+        ''' Go different directions then observe (calculate change of distance) '''
+        prev_pos = np.copy(self.pos)
+        if self.distance() > self.source_size:
+            if a == GO_LEFT:
+                self.theta -= self.granularity
+            elif a == GO_RIGHT:
+                self.theta += self.granularity
+            self.pos[0] += self.vel * np.cos(self.theta)
             self.pos[1] += self.vel * np.sin(self.theta)
             self.check_bounds()
-        elif a == TUMBLE:
-            self.theta = np.random.rand() * (2 * np.pi)
 
-        return self.observe()
+        return self.observe(prev_pos)
 
     def distance(self):
         ''' Distance between the agent and the source '''

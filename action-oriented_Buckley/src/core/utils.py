@@ -9,7 +9,7 @@ def get_mdp(agent_id, reverse_prior=False):
     c = np.zeros([N_OBS, 1])
 
     if reverse_prior:
-        c[0] = 1
+        c[2] = 1
     else:
         c[PRIOR_ID] = 1
 
@@ -26,7 +26,7 @@ def get_mdp(agent_id, reverse_prior=False):
     mdp = MDP(a, b, c, **kwargs)
     return mdp
 
-
+# may not be used
 def get_true_model():
     b = np.zeros([N_CONTROL, N_STATES, N_STATES])
     b[TUMBLE, :, :] = np.array([[0.5, 0.5], [0.5, 0.5]])

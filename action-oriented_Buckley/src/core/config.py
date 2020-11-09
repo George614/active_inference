@@ -19,11 +19,21 @@ INIT_DISTANCE = 400
 SOURCE_SIZE = 25
 AGENT_SIZE = 5
 VELOCITY = 1
+GRANULARITY = 30/180*np.pi
 
 TUMBLE = 0
 RUN = 1
 NEG_GRADIENT = 0
 POS_GRADIENT = 1
+
+# action/control ID
+GO_STRAIGHT = 0
+GO_LEFT = 1
+GO_RIGHT = 2
+# Obsercation/state ID
+CHANGE_NONE = 0
+CHANGE_CLOSER = 1
+CHANGE_FARTHER = 2
 
 ##############################
 #       Agent config        #
@@ -40,9 +50,9 @@ N_AGENTS = 4
 #        MDP config          #
 ##############################
 
-N_OBS = 2
-N_CONTROL = 2
-N_STATES = 2
+N_OBS = 3
+N_CONTROL = 3
+N_STATES = 3
 
 N_DISTRIBUTIONS = 4
 TUMBLE_NEG_ID = 0

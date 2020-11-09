@@ -25,7 +25,8 @@ def learn_trial(mdp, n_steps, record_states=False):
 def learn_record_trial(mdp, n_steps, env=None, record_states=True):
     if env is None:
         env = Environment()
-    obv = env.observe()
+    cur_pos = env.pos
+    obv = env.observe(cur_pos)
     mdp.reset(obv)
     # record the distribution of states
     states_dist = np.zeros((N_CONTROL, N_STATES, N_STATES))
