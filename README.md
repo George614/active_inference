@@ -1,2 +1,2 @@
 # active_inference
-playground for active inference in Python
+Code to support the experiments of the paper "On Generalizing Active Inference to Perceptual-Motor Learning Tasks".
