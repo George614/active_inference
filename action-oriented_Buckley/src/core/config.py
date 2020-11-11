@@ -19,11 +19,26 @@ INIT_DISTANCE = 400
 SOURCE_SIZE = 25
 AGENT_SIZE = 5
 VELOCITY = 1
+GRANULARITY = 30/180*np.pi
 
-TUMBLE = 0
-RUN = 1
-NEG_GRADIENT = 0
-POS_GRADIENT = 1
+# action/control ID
+GO_STRAIGHT = 0
+GO_LEFT = 1
+GO_RIGHT = 2
+# Obsercation/state ID
+VISUAL_R0 = 0
+VISUAL_R1 = 1
+VISUAL_R2 = 2
+VISUAL_R3 = 3
+VISUAL_R4 = 4 
+VISUAL_R5 = 5
+
+PREFERENCE_R0 = 0
+PREFERENCE_R1 = 2
+PREFERENCE_R2 = 4
+PREFERENCE_R3 = 2
+PREFERENCE_R4 = 0
+PREFERENCE_R5 = -2
 
 ##############################
 #       Agent config        #
@@ -36,21 +51,22 @@ RAND_ID = 3
 AGENT_NAMES = ["E.F.E", "Instrumental", "Epistemic", "Random"]
 N_AGENTS = 4
 
+# vision parameters
+FOV = 120
+VISUAL_BOUNDS = [-FOV/2, -20, -0.5, 0.5, 20, FOV/2]
+VISUAL_BOUNDS = [bound/180*np.pi for bound in VISUAL_BOUNDS]
+VISUAL_RANGES = [[VISUAL_BOUNDS[i], VISUAL_BOUNDS[i+1]] for i in range(len(VISUAL_BOUNDS)-1)]
+
 ##############################
 #        MDP config          #
 ##############################
 
-N_OBS = 2
-N_CONTROL = 2
-N_STATES = 2
+N_OBS = 6
+N_CONTROL = 3
+N_STATES = 6
 
-N_DISTRIBUTIONS = 4
-TUMBLE_NEG_ID = 0
-TUMBLE_POS_ID = 1
-RUN_NEG_ID = 2
-RUN_POS_ID = 3
+N_DISTRIBUTIONS = 18
 
-PRIOR_ID = 1
 ALPHA = 1 / 10
 LR = 0.005
 

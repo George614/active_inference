@@ -33,8 +33,9 @@ def learn_record_trial(mdp, n_steps, env=None, record_states=True):
     EFE_trial = np.zeros((n_steps, N_CONTROL))
     epistemic_trial = np.zeros((n_steps, N_CONTROL))
     instrumental_trial = np.zeros((n_steps, N_CONTROL))
-    pos_trial = np.zeros((n_steps, 2))
-    theta_trial = np.zeros((n_steps, 1))
+    pos_trial = np.zeros((n_steps, 2))   # agent's position
+    theta_trial = np.zeros((n_steps, 1)) # agent's orientation
+    phi_trial = np.zeros((n_steps, 1))   # visual angle of the target
 
     for step in range(n_steps):
         # execute routine in a step
@@ -48,6 +49,7 @@ def learn_record_trial(mdp, n_steps, env=None, record_states=True):
         instrumental_trial[step, :] = np.squeeze(mdp.utility[:])
         pos_trial[step, :] = env.pos[:]
         theta_trial[step, :] = env.theta
+        phi_trial[step, :] = env.phi
         if record_states:
             states_dist[action, obv, prev_obv] += 1
     
@@ -56,9 +58,10 @@ def learn_record_trial(mdp, n_steps, env=None, record_states=True):
                     "epistemic" : epistemic_trial,
                     "instrumental" : instrumental_trial,
                     "position" : pos_trial,
-                    "orientation" : theta_trial}
+                    "orientation" : theta_trial,
+                    "visual_angle" : phi_trial}
     if record_states:
-        record_dict["states_dist"] : states_dist
+        record_dict["states_dist"] = states_dist
 
     return mdp, record_dict
 

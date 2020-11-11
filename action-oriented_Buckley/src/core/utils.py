@@ -6,12 +6,9 @@ from .mdp import MDP
 def get_mdp(agent_id, reverse_prior=False):
     a = np.eye(N_OBS)
     b = np.random.rand(N_CONTROL, N_STATES, N_STATES)
-    c = np.zeros([N_OBS, 1])
-
-    if reverse_prior:
-        c[0] = 1
-    else:
-        c[PRIOR_ID] = 1
+    c = np.asarray([[PREFERENCE_R0, PREFERENCE_R1, PREFERENCE_R2, PREFERENCE_R3, PREFERENCE_R4, PREFERENCE_R5]])
+    c = c.T
+    c = MDP.softmax(c)
 
     kwargs = {}
     if agent_id == FULL_ID:
@@ -26,7 +23,7 @@ def get_mdp(agent_id, reverse_prior=False):
     mdp = MDP(a, b, c, **kwargs)
     return mdp
 
-
+# deprecated for now
 def get_true_model():
     b = np.zeros([N_CONTROL, N_STATES, N_STATES])
     b[TUMBLE, :, :] = np.array([[0.5, 0.5], [0.5, 0.5]])
