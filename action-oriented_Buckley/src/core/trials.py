@@ -2,6 +2,7 @@ import numpy as np
 from .env import Environment
 from .config import *
 import copy
+import time
 
 def learn_trial(mdp, n_steps, record_states=False):
     env = Environment()
@@ -36,6 +37,7 @@ def learn_record_trial(mdp, n_steps, env=None, record_states=True):
     instrumental_trial = np.zeros((n_steps, N_CONTROL))
     pos_trial = np.zeros((n_steps, 2))
     theta_trial = np.zeros((n_steps, 1))
+    time_start = time.perf_counter()
 
     for step in range(n_steps):
         # execute routine in a step
@@ -52,14 +54,16 @@ def learn_record_trial(mdp, n_steps, env=None, record_states=True):
         if record_states:
             states_dist[action, obv, prev_obv] += 1
     
+    time_trial = time.perf_counter() - time_start
     record_dict = {"steps" : n_steps,
                     "EFE" : EFE_trial,
                     "epistemic" : epistemic_trial,
                     "instrumental" : instrumental_trial,
                     "position" : pos_trial,
-                    "orientation" : theta_trial}
+                    "orientation" : theta_trial,
+                    "runtime" : time_trial}
     if record_states:
-        record_dict["states_dist"] : states_dist
+        record_dict["states_dist"] = states_dist
 
     return mdp, record_dict
 
