@@ -21,7 +21,7 @@ from matplotlib.animation import FFMpegWriter
 matplotlib.use("Agg")
 
 TRAIN_STEPS = 1500
-N_AGENTS = 5
+N_AGENTS = 1
 
 
 if __name__ == "__main__":
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         plt.xlim(0, ENVIRONMENT_SIZE)
         plt.ylim(0, ENVIRONMENT_SIZE)
     
-        with writer.saving(fig, "../videos/intercept_vision_full_agent_{}.mp4".format(n), 500):
+        with writer.saving(fig, "../videos/intercept_vision_full_agent_{}.mp4".format(n), 200):
             for i in range(len(pos_full)):
                 # back position
                 x = pos_full[i, 0]
