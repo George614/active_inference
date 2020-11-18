@@ -32,7 +32,7 @@ CHANGE_BOTH = 2
 
 CHANGE_DICT = {0 : "change_of_distance", 1 : "change_of_apporach_angle", 2 : "change_of_both"}
 # select the representation of observation / hidden state before running any experiments
-OBV_OPTION = CHANGE_ANGLE
+OBV_OPTION = CHANGE_BOTH
 
 # action/control ID
 GO_STRAIGHT = 0
@@ -69,6 +69,7 @@ RAND_ID = 3
 AGENT_NAMES = ["E.F.E", "Instrumental", "Epistemic", "Random"]
 N_AGENTS = 4
 
+CONTINUAL_LEARNING = True
 ##############################
 #        MDP config          #
 ##############################

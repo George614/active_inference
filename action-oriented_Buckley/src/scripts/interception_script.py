@@ -15,8 +15,8 @@ sys.path.append(os.getcwd() + '/..')
 import core
 from core.config import *
 
-TRAIN_STEPS = 800
-N_AGENTS = 1
+TRAIN_STEPS = 4500
+N_AGENTS = 3
 
 run_time = []  # runtime for full agents across trials
 
@@ -24,6 +24,8 @@ if __name__ == "__main__":
     print("Starting experiments with {} as observation, training {} agents...".format(CHANGE_DICT[OBV_OPTION], N_AGENTS))
     pathlist = os.getcwd().split('\\')
     path = os.path.join(pathlist[0], os.sep, *pathlist[1:-1], "data", CHANGE_DICT[OBV_OPTION])
+    if CONTINUAL_LEARNING:
+        path = path + "_continual_learning"
     if not os.path.isdir(path):
         os.makedirs(path)
         print("Created folder: ", path)

@@ -106,7 +106,10 @@ class Environment(object):
             self.pos[0] += self.vel * np.cos(self.theta)
             self.pos[1] += self.vel * np.sin(self.theta)
             self.check_bounds()
-
+        else:
+        	if CONTINUAL_LEARNING:
+        		self.reset()
+        		return self.observe(self.pos, self.phi)
         return self.observe(prev_pos, prev_angle)
 
     def distance(self):
