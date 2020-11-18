@@ -9,22 +9,24 @@ is learned and mutilple agents learned separately are saved.
 import numpy as np
 import sys
 import os
+import animate_energy_plots as apt
 
 sys.path.append(os.getcwd() + '/..')
-
 import core
 from core.config import *
-import matplotlib.pyplot as plt
-import matplotlib
-from matplotlib.animation import FFMpegWriter
 
-matplotlib.use("Agg")
+TRAIN_STEPS = 800
+N_AGENTS = 1
 
-TRAIN_STEPS = 1500
-N_AGENTS = 5
-
+run_time = []  # runtime for full agents across trials
 
 if __name__ == "__main__":
+    print("Starting experiments with {} as observation, training {} agents...".format(CHANGE_DICT[OBV_OPTION], N_AGENTS))
+    pathlist = os.getcwd().split('\\')
+    path = os.path.join(pathlist[0], os.sep, *pathlist[1:-1], "data", CHANGE_DICT[OBV_OPTION])
+    if not os.path.isdir(path):
+        os.makedirs(path)
+        print("Created folder: ", path)
     for n in range(N_AGENTS):
         # initialize agents
         full_agent = core.get_mdp(FULL_ID)
@@ -39,89 +41,18 @@ if __name__ == "__main__":
         rand_agent, rand_record = core.learn_record_trial(rand_agent, TRAIN_STEPS)
         
         # save record of trial information for all agents
-        np.save("../data/full_single_record_{}.npy".format(n), full_record)
-        np.save("../data/inst_single_record_{}.npy".format(n), inst_record)
-        np.save("../data/epis_single_record_{}.npy".format(n), epis_record)
-        np.save("../data/rand_single_record_{}.npy".format(n), rand_record)
+        np.save(os.path.join(path, "full_single_record_{}.npy".format(n)), full_record)
+        np.save(os.path.join(path, "inst_single_record_{}.npy".format(n)), inst_record)
+        np.save(os.path.join(path, "epis_single_record_{}.npy".format(n)), epis_record)
+        np.save(os.path.join(path, "rand_single_record_{}.npy".format(n)), rand_record)
         print("> Data saved for agent #{}.".format(n))
+          
+        # generate visualizations and save as pdf and mp4
+        apt.plot_energy(full_record, n, path)
+        apt.animate_energy_plots(full_record, n, path)
+        apt.animate_trajectory(full_record, n, path)
         
-        # access the free energy values for 2 control states respectively
-        efe_straight = full_record["EFE"][:, GO_STRAIGHT]
-        efe_left = full_record["EFE"][:, GO_LEFT] 
-        efe_right = full_record["EFE"][:, GO_RIGHT]
-        inst_straight = full_record["instrumental"][:, GO_STRAIGHT]
-        inst_left = full_record["instrumental"][:, GO_LEFT]
-        inst_right = full_record["instrumental"][:, GO_RIGHT]
-        epis_straight = full_record["epistemic"][:, GO_STRAIGHT]
-        epis_left = full_record["epistemic"][:, GO_LEFT]
-        epis_right = full_record["epistemic"][:, GO_RIGHT]
-        
-        steps = np.arange(full_record["steps"])
-        
-        ### plot the free energy under 2 control states for 3 agents respectively ###
+        run_time.append(full_record["runtime"])
     
-        fig, ax = plt.subplots()
-        ax.plot(steps, efe_straight, lw=1, linestyle="--", label="EFE go straight")
-        ax.plot(steps, efe_left, lw=1, linestyle="--", label="EFE go left")
-        ax.plot(steps, efe_right, lw=1, linestyle="--", label="EFE go right")
-        ax.legend()
-        plt.xlabel('Time steps')
-        plt.ylabel('Free energy in bits')
-        plt.title("Full (E.F.E) agent")
-        fig.savefig('../figs/Full_control_energy_{}.pdf'.format(n), dpi=600, bbox_inches="tight")
-        plt.show()
-        
-        fig, ax = plt.subplots()
-        ax.plot(steps, inst_straight, lw=1, linestyle="--", label="Instrumental go straight")
-        ax.plot(steps, inst_left, lw=1, linestyle="--", label="Instrumental go left")
-        ax.plot(steps, inst_right, lw=1, linestyle="--", label="Instrumental go right")
-        ax.legend()
-        plt.xlabel('Time steps')
-        plt.ylabel('Free energy in bits')
-        plt.title("Instrumental component")
-        fig.savefig('../figs/Instrumental_control_energy_{}.pdf'.format(n), dpi=600, bbox_inches="tight")
-        plt.show()
-        
-        fig, ax = plt.subplots()
-        ax.plot(steps, epis_straight, lw=1, linestyle="--", label="Epistemic go straight")
-        ax.plot(steps, epis_left, lw=1, linestyle="--", label="Epistemic go left")
-        ax.plot(steps, epis_right, lw=1, linestyle="--", label="Epistemic go right")
-        ax.legend()
-        plt.xlabel('Time steps')
-        plt.ylabel('Free energy in bits')
-        plt.title("Epistemic component")
-        fig.savefig('../figs/Epistemic_control_energy_{}.pdf'.format(n), dpi=600, bbox_inches="tight")
-        plt.show()
-    
-        ### generate an animation file for the full (E.F.E) agent's trajectory during the trial ###
-        
-        metadata = dict(title='Full agent trajectory', artist='George Yang',
-                    comment='Animation for a single full (E.F.E) agent during 1 trial')
-        writer = FFMpegWriter(fps=15, metadata=metadata)
-        
-        pos_full = full_record['position']
-        theta_full = full_record['orientation'].squeeze()
-        
-        fig = plt.figure()
-        line1, = plt.plot([], [], 'b-o', markersize=2)
-        line2, = plt.plot([], [], 'k-D', markersize=2)
-        scat = plt.scatter(250, 250, s=25**2, alpha=0.2)
-    
-        agent_size = AGENT_SIZE
-    
-        plt.xlim(0, ENVIRONMENT_SIZE)
-        plt.ylim(0, ENVIRONMENT_SIZE)
-    
-        with writer.saving(fig, "../videos/intercept_full_agent_{}.mp4".format(n), 500):
-            for i in range(len(pos_full)):
-                # back position
-                x = pos_full[i, 0]
-                y = pos_full[i, 1]
-                # calculate front position
-                fx = x + agent_size * np.cos(theta_full[i])
-                fy = y + agent_size * np.sin(theta_full[i])
-                line1.set_data(x, y)
-                line2.set_data(fx, fy)
-                writer.grab_frame()
-        
-        print("> Video saved for agent #{}.".format(n))
+    runtime_avg_scaled = np.mean(run_time) / TRAIN_STEPS * 1000
+    print("> Finished all experiments with scaled-average runtime ", runtime_avg_scaled)
