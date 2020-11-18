@@ -83,7 +83,7 @@ class MDP(object):
             # parameter epistemic value, equation 15 and 18
             surprise = self.bayesian_surprise(u, fs) * self.beta
 
-            self.utility[u] = utility
+            self.utility[u] = -utility
             self.surprise[u] = surprise
 
             # equation 15 and 18
