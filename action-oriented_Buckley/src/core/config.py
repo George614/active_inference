@@ -21,19 +21,42 @@ AGENT_SIZE = 5
 VELOCITY = 1
 GRANULARITY = 30/180*np.pi
 
-TUMBLE = 0
-RUN = 1
-NEG_GRADIENT = 0
-POS_GRADIENT = 1
+# TUMBLE = 0
+# RUN = 1
+# NEG_GRADIENT = 0
+# POS_GRADIENT = 1
+
+CHANGE_DISTANCE = 0
+CHANGE_ANGLE = 1
+CHANGE_BOTH = 2
+
+CHANGE_DICT = {0 : "change_of_distance", 1 : "change_of_apporach_angle", 2 : "change_of_both"}
+# select the representation of observation / hidden state before running any experiments
+OBV_OPTION = CHANGE_ANGLE
 
 # action/control ID
 GO_STRAIGHT = 0
 GO_LEFT = 1
 GO_RIGHT = 2
+
 # Obsercation/state ID
 CHANGE_NONE = 0
 CHANGE_CLOSER = 1
 CHANGE_FARTHER = 2
+
+TURN_NONE = 0
+TURN_TOWARDS = 1
+TURN_AWAY = 2
+
+DIS_NONE_TURN_NONE = 0
+DIS_NONE_TURN_TOWARDS = 1
+DIS_NONE_TURN_AWAY = 2
+DIS_CLOSER_TURN_NONE = 3
+DIS_CLOSER_TURN_TOWARDS = 4
+DIS_CLOSER_TURN_AWAY = 5
+DIS_FARTHER_TURN_NONE = 6
+DIS_FARTHER_TURN_TOWARDS = 7
+DIS_FARTHER_TURN_AWAY = 8
 
 ##############################
 #       Agent config        #
@@ -50,19 +73,29 @@ N_AGENTS = 4
 #        MDP config          #
 ##############################
 
-N_OBS = 3
-N_CONTROL = 3
-N_STATES = 3
+if OBV_OPTION == CHANGE_DISTANCE or OBV_OPTION == CHANGE_ANGLE:
+	N_OBS = 3
+	N_CONTROL = 3
+	N_STATES = 3
+	N_DISTRIBUTIONS = 9
+	PRIOR_ID = 1
+elif OBV_OPTION == CHANGE_BOTH:
+	N_OBS = 9
+	N_CONTROL = 3
+	N_STATES = 9
+	N_DISTRIBUTIONS = 27
+	PRIOR_ID = 4
+else:
+	raise ValueError("Incorrect choise of observation/hidden state representation.")
 
-N_DISTRIBUTIONS = 4
-TUMBLE_NEG_ID = 0
-TUMBLE_POS_ID = 1
-RUN_NEG_ID = 2
-RUN_POS_ID = 3
-
-PRIOR_ID = 1
 ALPHA = 1 / 10
 LR = 0.005
+
+
+# TUMBLE_NEG_ID = 0
+# TUMBLE_POS_ID = 1
+# RUN_NEG_ID = 2
+# RUN_POS_ID = 3
 
 ##############################
 #       File config          #

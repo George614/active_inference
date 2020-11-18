@@ -27,7 +27,8 @@ def learn_record_trial(mdp, n_steps, env=None, record_states=True):
     if env is None:
         env = Environment()
     cur_pos = env.pos
-    obv = env.observe(cur_pos)
+    cur_phi = env.phi
+    obv = env.observe(cur_pos, cur_phi)
     mdp.reset(obv)
     # record the distribution of states
     states_dist = np.zeros((N_CONTROL, N_STATES, N_STATES))
@@ -35,8 +36,9 @@ def learn_record_trial(mdp, n_steps, env=None, record_states=True):
     EFE_trial = np.zeros((n_steps, N_CONTROL))
     epistemic_trial = np.zeros((n_steps, N_CONTROL))
     instrumental_trial = np.zeros((n_steps, N_CONTROL))
-    pos_trial = np.zeros((n_steps, 2))
-    theta_trial = np.zeros((n_steps, 1))
+    pos_trial = np.zeros((n_steps, 2))  # agent's position
+    theta_trial = np.zeros((n_steps, 1))  # agent's orientation in the environment
+    phi_trial = np.zeros((n_steps, 1))   # agent's approach angle to the target
     time_start = time.perf_counter()
 
     for step in range(n_steps):
@@ -61,6 +63,7 @@ def learn_record_trial(mdp, n_steps, env=None, record_states=True):
                     "instrumental" : instrumental_trial,
                     "position" : pos_trial,
                     "orientation" : theta_trial,
+                    "approach_angle" : phi_trial,
                     "runtime" : time_trial}
     if record_states:
         record_dict["states_dist"] = states_dist
