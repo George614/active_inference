@@ -23,10 +23,16 @@ def plot_energy(record, n, path):
     record: numpy list which stores all information of a trial
     n: index of the trial
     '''
-    steps = np.arange(record["steps"])
     efe = record["EFE"]
     epistemic = record["epistemic"]
     instrumental = record["instrumental"]
+    fully_trained = record["fully_trained"]
+    train_steps = record["steps"]
+    if fully_trained:
+        efe = efe[train_steps:]
+        epistemic = epistemic[train_steps:]
+        instrumental = instrumental[train_steps:]
+    steps = len(efe)
     efe_straight = efe[:, GO_STRAIGHT]
     efe_left = efe[:, GO_LEFT] 
     efe_right = efe[:, GO_RIGHT]
@@ -80,6 +86,12 @@ def animate_energy_plots(record, n, path):
     efe = record["EFE"]
     epistemic = record["epistemic"]
     instrumental = record["instrumental"]
+    fully_trained = record["fully_trained"]
+    train_steps = record["steps"]
+    if fully_trained:
+        efe = efe[train_steps:]
+        epistemic = epistemic[train_steps:]
+        instrumental = instrumental[train_steps:]
     steps = len(efe)
     start_time = time.perf_counter()
     fig = plt.figure(constrained_layout=True)
@@ -183,6 +195,11 @@ def animate_trajectory(record, n, path):
     
     pos_full = record['position']
     theta_full = record['orientation'].squeeze()
+    fully_trained = record["fully_trained"]
+    train_steps = record["steps"]
+    if fully_trained:
+        pos_full = pos_full[train_steps:]
+        theta_full = theta_full[train_steps:]
     
     fig = plt.figure()
     line1, = plt.plot([], [], 'b-o', markersize=2)

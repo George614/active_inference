@@ -23,9 +23,13 @@ def learn_trial(mdp, n_steps, record_states=False):
     return mdp
 
 
-def learn_record_trial(mdp, n_steps, env=None, record_states=True):
+def learn_record_trial(mdp, n_steps, test_steps=None, env=None, record_states=True):
     if env is None:
         env = Environment()
+    if test_steps is not None and not CONTINUAL_LEARNING:
+        raise ValueError("Cannot run fully-trained agent without continual learning!")
+    if test_steps is None:
+        test_steps = 0
     cur_pos = env.pos
     cur_phi = env.phi
     obv = env.observe(cur_pos, cur_phi)
@@ -33,20 +37,23 @@ def learn_record_trial(mdp, n_steps, env=None, record_states=True):
     # record the distribution of states
     states_dist = np.zeros((N_CONTROL, N_STATES, N_STATES))
     # values of EFE for all control states throughout a trial (to be recorded)
-    EFE_trial = np.zeros((n_steps, N_CONTROL))
-    epistemic_trial = np.zeros((n_steps, N_CONTROL))
-    instrumental_trial = np.zeros((n_steps, N_CONTROL))
-    pos_trial = np.zeros((n_steps, 2))  # agent's position
-    theta_trial = np.zeros((n_steps, 1))  # agent's orientation in the environment
-    phi_trial = np.zeros((n_steps, 1))   # agent's approach angle to the target
+    EFE_trial = np.zeros((n_steps + test_steps, N_CONTROL))
+    epistemic_trial = np.zeros((n_steps + test_steps, N_CONTROL))
+    instrumental_trial = np.zeros((n_steps + test_steps, N_CONTROL))
+    pos_trial = np.zeros((n_steps + test_steps, 2))  # agent's position
+    theta_trial = np.zeros((n_steps + test_steps, 1))  # agent's orientation in the environment
+    phi_trial = np.zeros((n_steps + test_steps, 1))   # agent's approach angle to the target
+
     time_start = time.perf_counter()
 
-    for step in range(n_steps):
+    for step in range(n_steps + test_steps):
         # execute routine in a step
         prev_obv = obv
         action = mdp.step(obv)
         obv = env.act(action)
-        mdp.update(action, obv, prev_obv)
+        # train an agent fully then turn off learning and run it
+        if step < n_steps:
+            mdp.update(action, obv, prev_obv)
         # record the values
         EFE_trial[step, :] = np.squeeze(mdp.EFE[:])
         epistemic_trial[step, :] = np.squeeze(mdp.surprise[:])
@@ -64,9 +71,15 @@ def learn_record_trial(mdp, n_steps, env=None, record_states=True):
                     "position" : pos_trial,
                     "orientation" : theta_trial,
                     "approach_angle" : phi_trial,
-                    "runtime" : time_trial}
+                    "runtime" : time_trial,
+                    "fully_trained" : False,
+                    "B" : mdp.B,
+                    "Ba" : mdp.Ba,
+                    "wB" : mdp.wB}
     if record_states:
         record_dict["states_dist"] = states_dist
+    if test_steps > 0 and CONTINUAL_LEARNING:
+        record_dict["fully_trained"] = True
 
     return mdp, record_dict
 
