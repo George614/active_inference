@@ -54,6 +54,9 @@ def learn_record_trial(mdp, n_steps, test_steps=None, env=None, record_states=Tr
         # train an agent fully then turn off learning and run it
         if step < n_steps:
             mdp.update(action, obv, prev_obv)
+        if step == n_steps:
+            env.reset()
+            mdp.reset(env.observe(env.pos, env.phi))
         # record the values
         EFE_trial[step, :] = np.squeeze(mdp.EFE[:])
         epistemic_trial[step, :] = np.squeeze(mdp.surprise[:])
@@ -73,6 +76,7 @@ def learn_record_trial(mdp, n_steps, test_steps=None, env=None, record_states=Tr
                     "approach_angle" : phi_trial,
                     "runtime" : time_trial,
                     "fully_trained" : False,
+                    "steps_episode" : env.steps_episode,
                     "B" : mdp.B,
                     "Ba" : mdp.Ba,
                     "wB" : mdp.wB}

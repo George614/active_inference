@@ -29,6 +29,8 @@ class Environment(object):
         self.s2_pos = None  # added
         self.theta = None  # agent's orientation
         self.phi = None  # approach angle
+        self.step_count = None  # time steps used so far
+        self.steps_episode = []  # total time steps used per episode
         self.reset()
 
     def reset(self):
@@ -46,6 +48,7 @@ class Environment(object):
         vec_agent_to_source = self.vec_norm(np.asarray(self.s_pos) - np.asarray(self.pos))
         vec_agent_heading = np.asarray([np.cos(self.theta), np.sin(self.theta)])
         self.phi = np.arccos(np.dot(vec_agent_to_source, vec_agent_heading))
+        self.step_count = 0
         
         self.observe(self.pos, self.phi)
 
@@ -106,8 +109,10 @@ class Environment(object):
             self.pos[0] += self.vel * np.cos(self.theta)
             self.pos[1] += self.vel * np.sin(self.theta)
             self.check_bounds()
+            self.step_count += 1
         else:
         	if CONTINUAL_LEARNING:
+        		self.steps_episode.append(self.step_count)
         		self.reset()
         		return self.observe(self.pos, self.phi)
         return self.observe(prev_pos, prev_angle)

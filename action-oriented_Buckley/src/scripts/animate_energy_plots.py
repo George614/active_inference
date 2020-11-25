@@ -32,7 +32,7 @@ def plot_energy(record, n, path):
         efe = efe[train_steps:]
         epistemic = epistemic[train_steps:]
         instrumental = instrumental[train_steps:]
-    steps = len(efe)
+    steps = np.arange(len(efe))
     efe_straight = efe[:, GO_STRAIGHT]
     efe_left = efe[:, GO_LEFT] 
     efe_right = efe[:, GO_RIGHT]
