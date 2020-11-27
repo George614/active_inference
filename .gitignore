@@ -134,3 +134,5 @@ dmypy.json
 # .jpg
 
 action-oriented_Buckley/src/data_archived/
+
+action-oriented_Buckley/.vscode/

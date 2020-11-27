@@ -51,7 +51,6 @@ def plot_energy(record, n, path):
     plt.ylabel('Free energy in bits')
     plt.title("Full (E.F.E) agent")
     fig.savefig(os.path.join(path, 'Full_control_energy_{}.pdf'.format(n)), dpi=600, bbox_inches="tight")
-    # plt.show()
     
     fig, ax = plt.subplots()
     ax.plot(steps, inst_straight, lw=1, linestyle="--", label="Instrumental go straight")
@@ -62,7 +61,6 @@ def plot_energy(record, n, path):
     plt.ylabel('Free energy in bits')
     plt.title("Instrumental component")
     fig.savefig(os.path.join(path, 'Instrumental_control_energy_{}.pdf'.format(n)), dpi=600, bbox_inches="tight")
-    # plt.show()
     
     fig, ax = plt.subplots()
     ax.plot(steps, epis_straight, lw=1, linestyle="--", label="Epistemic go straight")
@@ -73,7 +71,6 @@ def plot_energy(record, n, path):
     plt.ylabel('Free energy in bits')
     plt.title("Epistemic component")
     fig.savefig(os.path.join(path, 'Epistemic_control_energy_{}.pdf'.format(n)), dpi=600, bbox_inches="tight")
-    # plt.show()
     print("> Plots saved for agent #{}.".format(n))
 
 def animate_energy_plots(record, n, path):
@@ -177,7 +174,6 @@ def animate_energy_plots(record, n, path):
         return line1, line2, line3, line4, line5, line6, line7, line8, line9
     
     ani = FuncAnimation(fig, animate, init_func=init, frames=steps, blit=True)
-    # plt.show()
     ani.save(os.path.join(path, "energy_animation_{}.mp4".format(n)), fps=ani_fps, dpi=200)
     print("> Runtime for animating energy plots: {} s".format(time.perf_counter()-start_time))
     print("> Animation of energy saved for agent #{}.".format(n))
@@ -194,17 +190,19 @@ def animate_trajectory(record, n, path):
     writer = FFMpegWriter(fps=ani_fps, metadata=metadata)
     
     pos_full = record['position']
+    s_pos_full = record['s_pos']
     theta_full = record['orientation'].squeeze()
     fully_trained = record["fully_trained"]
     train_steps = record["steps"]
     if fully_trained:
         pos_full = pos_full[train_steps:]
         theta_full = theta_full[train_steps:]
+        s_pos_full = s_pos_full[train_steps:]
     
     fig = plt.figure()
     line1, = plt.plot([], [], 'b-o', markersize=2)
     line2, = plt.plot([], [], 'k-D', markersize=2)
-    scat = plt.scatter(250, 250, s=SOURCE_SIZE**2, alpha=0.2)
+    line_s, = plt.plot([], [], 'yo', markersize=SOURCE_SIZE, alpha=0.2)
 
     plt.xlim(0, ENVIRONMENT_SIZE)
     plt.ylim(0, ENVIRONMENT_SIZE)
@@ -219,6 +217,9 @@ def animate_trajectory(record, n, path):
             fy = y + AGENT_SIZE * np.sin(theta_full[i])
             line1.set_data(x, y)
             line2.set_data(fx, fy)
+            # source position
+            s_pos = s_pos_full[i, :]
+            line_s.set_data(s_pos[0], s_pos[1])
             writer.grab_frame()
     
     print("> Animation for agent trajectory saved for agent #{}.".format(n))

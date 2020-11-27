@@ -18,16 +18,17 @@ import core
 import animate_energy_plots as apt
 from core.config import *
 
-TRAIN_STEPS = 1000
+TRAIN_STEPS = 2000
 TEST_STEPS = 0
-N_AGENTS = 4
+N_AGENTS = 1
 
 
 ## handle path and create folder if necessary
 pathlist = os.getcwd().split(os.sep)
 path = os.path.join(pathlist[0], os.sep, *pathlist[1:-1], "data", CHANGE_DICT[OBV_OPTION])
 if CONTINUAL_LEARNING and TEST_STEPS<=0:
-    path = path + "_continual_learning_circle"
+    # path = path + "_continual_learning_circle"
+    path = path + "_continual_learning_rhombus"
 elif CONTINUAL_LEARNING and TEST_STEPS>0:
     path = path + "_shut_learning"
 if not os.path.isdir(path):
@@ -51,9 +52,9 @@ def run_exp_parallel(n):
     rand_agent, rand_record = core.learn_record_trial(rand_agent, TRAIN_STEPS, TEST_STEPS)
     
     ## generate visualizations and save as pdf and mp4 ##
-    # apt.plot_energy(full_record, n, path)
+    apt.plot_energy(full_record, n, path)
     # apt.animate_energy_plots(full_record, n, path)
-    # apt.animate_trajectory(full_record, n, path)
+    apt.animate_trajectory(full_record, n, path)
     
     return full_record, inst_record, epis_record, rand_record
     

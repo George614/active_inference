@@ -41,6 +41,7 @@ def learn_record_trial(mdp, n_steps, test_steps=None, env=None, record_states=Tr
     epistemic_trial = np.zeros((n_steps + test_steps, N_CONTROL))
     instrumental_trial = np.zeros((n_steps + test_steps, N_CONTROL))
     pos_trial = np.zeros((n_steps + test_steps, 2))  # agent's position
+    s_pos_trial = np.zeros((n_steps + test_steps, 2))  # source position
     theta_trial = np.zeros((n_steps + test_steps, 1))  # agent's orientation in the environment
     phi_trial = np.zeros((n_steps + test_steps, 1))   # agent's approach angle to the target
 
@@ -62,6 +63,7 @@ def learn_record_trial(mdp, n_steps, test_steps=None, env=None, record_states=Tr
         epistemic_trial[step, :] = np.squeeze(mdp.surprise[:])
         instrumental_trial[step, :] = np.squeeze(mdp.utility[:])
         pos_trial[step, :] = env.pos[:]
+        s_pos_trial[step, :] = env.s_pos[:]
         theta_trial[step, :] = env.theta
         if record_states:
             states_dist[action, obv, prev_obv] += 1
@@ -72,6 +74,7 @@ def learn_record_trial(mdp, n_steps, test_steps=None, env=None, record_states=Tr
                     "epistemic" : epistemic_trial,
                     "instrumental" : instrumental_trial,
                     "position" : pos_trial,
+                    "s_pos" : s_pos_trial,
                     "orientation" : theta_trial,
                     "approach_angle" : phi_trial,
                     "runtime" : time_trial,
