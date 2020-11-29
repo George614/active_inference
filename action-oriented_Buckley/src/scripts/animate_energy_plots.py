@@ -189,37 +189,49 @@ def animate_trajectory(record, n, path):
                     comment='Animation for a single full (E.F.E) agent during 1 trial')
     writer = FFMpegWriter(fps=ani_fps, metadata=metadata)
     
-    pos_full = record['position']
-    s_pos_full = record['s_pos']
-    theta_full = record['orientation'].squeeze()
+    pos_trial = record['position']
+    s_pos_trial = record['s_pos']
+    theta_trial = record['orientation'].squeeze()
+    uQ_trial = record['uQ']
     fully_trained = record["fully_trained"]
     train_steps = record["steps"]
     if fully_trained:
-        pos_full = pos_full[train_steps:]
-        theta_full = theta_full[train_steps:]
-        s_pos_full = s_pos_full[train_steps:]
+        pos_trial = pos_trial[train_steps:]
+        theta_trial = theta_trial[train_steps:]
+        s_pos_trial = s_pos_trial[train_steps:]
     
     fig = plt.figure()
     line1, = plt.plot([], [], 'b-o', markersize=2)
     line2, = plt.plot([], [], 'k-D', markersize=2)
     line_s, = plt.plot([], [], 'yo', markersize=SOURCE_SIZE, alpha=0.2)
+    text1 = plt.text(0, 510, '', fontsize='small')
+    text2 = plt.text(90, 510, '', fontsize='small')
+    text3 = plt.text(200, 510, '', fontsize='small')
 
     plt.xlim(0, ENVIRONMENT_SIZE)
     plt.ylim(0, ENVIRONMENT_SIZE)
 
     with writer.saving(fig, os.path.join(path, "intercept_full_agent_{}.mp4".format(n)), 200):
-        for i in range(len(pos_full)):
+        for i in range(len(pos_trial)):
             # back position
-            x = pos_full[i, 0]
-            y = pos_full[i, 1]
+            x = pos_trial[i, 0]
+            y = pos_trial[i, 1]
             # calculate front position
-            fx = x + AGENT_SIZE * np.cos(theta_full[i])
-            fy = y + AGENT_SIZE * np.sin(theta_full[i])
+            fx = x + AGENT_SIZE * np.cos(theta_trial[i])
+            fy = y + AGENT_SIZE * np.sin(theta_trial[i])
             line1.set_data(x, y)
             line2.set_data(fx, fy)
             # source position
-            s_pos = s_pos_full[i, :]
+            s_pos = s_pos_trial[i, :]
             line_s.set_data(s_pos[0], s_pos[1])
+            maxU = np.argmax(uQ_trial[i])
+            text2.set_text('Go straight: %.2f' % uQ_trial[i, 0])
+            text1.set_text('Go left: %.2f' % uQ_trial[i, 1])
+            text3.set_text('Go right: %.2f' % uQ_trial[i, 2])
+            text2.set_color('red' if maxU==0 else 'black')
+            text1.set_color('red' if maxU==1 else 'black')
+            text3.set_color('red' if maxU==2 else 'black')
+
             writer.grab_frame()
     
     print("> Animation for agent trajectory saved for agent #{}.".format(n))
