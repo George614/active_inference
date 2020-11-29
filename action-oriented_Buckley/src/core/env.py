@@ -33,9 +33,9 @@ class Environment(object):
         self.episode_count = 0
         self.steps_episode = []  # total time steps used per episode
         self.s_pos_list = [[self.env_size/2, self.env_size-2*self.source_size], 
-        					[self.env_size-2*self.source_size, self.env_size/2],
-        					[self.env_size/2, 2*self.source_size],
-        					[2*self.source_size, self.env_size/2]]
+                            [self.env_size-2*self.source_size, self.env_size/2],
+                            [self.env_size/2, 2*self.source_size],
+                            [2*self.source_size, self.env_size/2]]
         self.reset()
 
     def reset(self):
@@ -46,7 +46,7 @@ class Environment(object):
         # self.pos = [fx, fy]  # positon of the back end of the chemotaxis/agent
         self.s_pos = self.s_pos_list[self.episode_count % len(self.s_pos_list)] # source position
         if self.episode_count == 0:
-        	self.theta = np.random.rand() * (2 * np.pi)  # orientation of the agent
+            self.theta = np.random.rand() * (2 * np.pi)  # orientation of the agent
         vec_agent_to_source = self.vec_norm(np.asarray(self.s_pos) - np.asarray(self.pos))
         vec_agent_heading = np.asarray([np.cos(self.theta), np.sin(self.theta)])
         self.phi = np.arccos(np.dot(vec_agent_to_source, vec_agent_heading))
@@ -71,6 +71,7 @@ class Environment(object):
                 o = CHANGE_FARTHER
             else:
                 o = CHANGE_NONE
+        
         elif self.representation == CHANGE_ANGLE:
             if prev_angle > self.phi:
                 o = TURN_TOWARDS
@@ -78,24 +79,33 @@ class Environment(object):
                 o = TURN_AWAY
             else:
                 o = TURN_NONE
+                
         elif self.representation == CHANGE_BOTH:
-            if prev_dis > cur_dis and prev_angle > self.phi:
+            if np.abs(prev_angle - self.phi) <= self.granularity:
+                o_angle = TURN_NONE
+            else:
+                if prev_angle > self.phi:
+                    o_angle = TURN_TOWARDS
+                elif prev_angle < self.phi:
+                    o_angle = TURN_AWAY
+
+            if prev_dis > cur_dis and o_angle == TURN_TOWARDS:
                 o = DIS_CLOSER_TURN_TOWARDS
-            elif prev_dis > cur_dis and prev_angle < self.phi:
+            elif prev_dis > cur_dis and o_angle == TURN_AWAY:
                 o = DIS_CLOSER_TURN_AWAY
-            elif prev_dis > cur_dis and prev_angle == self.phi:
+            elif prev_dis > cur_dis and o_angle == TURN_NONE:
                 o = DIS_CLOSER_TURN_NONE
-            elif prev_dis < cur_dis and prev_angle > self.phi:
+            elif prev_dis < cur_dis and o_angle == TURN_TOWARDS:
                 o = DIS_FARTHER_TURN_TOWARDS
-            elif prev_dis < cur_dis and prev_angle < self.phi:
+            elif prev_dis < cur_dis and o_angle == TURN_AWAY:
                 o = DIS_FARTHER_TURN_AWAY
-            elif prev_dis < cur_dis and prev_angle == self.phi:
-                o = DIS_CLOSER_TURN_NONE
-            elif prev_dis == cur_dis and prev_angle > self.phi:
+            elif prev_dis < cur_dis and o_angle == TURN_NONE:
+                o = DIS_FARTHER_TURN_NONE
+            elif prev_dis == cur_dis and o_angle == TURN_TOWARDS:
                 o = DIS_NONE_TURN_TOWARDS
-            elif prev_dis == cur_dis and prev_angle < self.phi:
+            elif prev_dis == cur_dis and o_angle == TURN_AWAY:
                 o = DIS_NONE_TURN_AWAY
-            elif prev_dis == cur_dis and prev_angle == self.phi:
+            elif prev_dis == cur_dis and o_angle == TURN_NONE:
                 o = DIS_NONE_TURN_NONE
         return o
 
@@ -105,19 +115,19 @@ class Environment(object):
         prev_angle = np.copy(self.phi)
         if self.distance() > self.source_size:
             if a == GO_LEFT:
-                self.theta -= self.granularity
-            elif a == GO_RIGHT:
                 self.theta += self.granularity
+            elif a == GO_RIGHT:
+                self.theta -= self.granularity
             self.pos[0] += self.vel * np.cos(self.theta)
             self.pos[1] += self.vel * np.sin(self.theta)
             self.check_bounds()
             self.step_count += 1
         else:
-        	if CONTINUAL_LEARNING:
-        		self.steps_episode.append(self.step_count)
-        		self.episode_count += 1
-        		self.reset()
-        		return self.observe(self.pos, self.phi)
+            if CONTINUAL_LEARNING:
+                self.steps_episode.append(self.step_count)
+                self.episode_count += 1
+                self.reset()
+                return self.observe(self.pos, self.phi)
         return self.observe(prev_pos, prev_angle)
 
     def distance(self):

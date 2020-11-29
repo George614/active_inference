@@ -8,10 +8,13 @@ def get_mdp(agent_id, reverse_prior=False):
     b = np.random.rand(N_CONTROL, N_STATES, N_STATES)
     c = np.zeros([N_OBS, 1])
 
-    if reverse_prior:
-        c[2] = 1
-    else:
+    if OBV_OPTION == CHANGE_DISTANCE or OBV_OPTION == CHANGE_ANGLE:
         c[PRIOR_ID] = 1
+    elif OBV_OPTION == CHANGE_BOTH:
+        # hand-crafted prior for the interception task with both observations
+        c = np.asarray([[0, 0, 0, 8, 4, 0, -1, 0, -2]])
+        c = c.T
+        c = MDP.softmax(c)
 
     kwargs = {}
     if agent_id == FULL_ID:

@@ -85,7 +85,7 @@ elif OBV_OPTION == CHANGE_BOTH:
 	N_CONTROL = 3
 	N_STATES = 9
 	N_DISTRIBUTIONS = 27
-	PRIOR_ID = 4
+	PRIOR_ID = 3
 else:
 	raise ValueError("Incorrect choise of observation/hidden state representation.")
 
