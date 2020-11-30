@@ -4,7 +4,9 @@ Created on Sun Nov 15 19:22:17 2020
 
 @author: George
 """
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+import seaborn as sns
+from tqdm import tqdm
 from matplotlib.animation import FuncAnimation, FFMpegWriter
 import numpy as np
 import time
@@ -15,6 +17,7 @@ sys.path.append(os.getcwd() + '/..')
 from core.config import *
 
 ani_fps = 15
+
 
 def plot_energy(record, n, path):
     '''
@@ -72,6 +75,7 @@ def plot_energy(record, n, path):
     plt.title("Epistemic component")
     fig.savefig(os.path.join(path, 'Epistemic_control_energy_{}.pdf'.format(n)), dpi=600, bbox_inches="tight")
     print("> Plots saved for agent #{}.".format(n))
+
 
 def animate_energy_plots(record, n, path):
     '''
@@ -178,6 +182,7 @@ def animate_energy_plots(record, n, path):
     print("> Runtime for animating energy plots: {} s".format(time.perf_counter()-start_time))
     print("> Animation of energy saved for agent #{}.".format(n))
 
+
 def animate_trajectory(record, n, path):
     '''
     Generate an animation file for the full (E.F.E) agent's trajectory 
@@ -185,6 +190,7 @@ def animate_trajectory(record, n, path):
     record: numpy list which stores all information of a trial
     n: index of the trial
     '''
+    print("> Creating animation for agent trajectory...")
     metadata = dict(title='Full agent trajectory', artist='George Yang',
                     comment='Animation for a single full (E.F.E) agent during 1 trial')
     writer = FFMpegWriter(fps=ani_fps, metadata=metadata)
@@ -193,6 +199,8 @@ def animate_trajectory(record, n, path):
     s_pos_trial = record['s_pos']
     theta_trial = record['orientation'].squeeze()
     uQ_trial = record['uQ']
+    phi_trial = record['approach_angle']
+    prev_obv_trial = record['prev_obv']
     fully_trained = record["fully_trained"]
     train_steps = record["steps"]
     if fully_trained:
@@ -207,12 +215,14 @@ def animate_trajectory(record, n, path):
     text1 = plt.text(0, 510, '', fontsize='small')
     text2 = plt.text(90, 510, '', fontsize='small')
     text3 = plt.text(200, 510, '', fontsize='small')
+    text4 = plt.text(300, 510, '', fontsize='small')
+    text5 = plt.text(0, 530, '', fontsize='small')
 
     plt.xlim(0, ENVIRONMENT_SIZE)
     plt.ylim(0, ENVIRONMENT_SIZE)
 
     with writer.saving(fig, os.path.join(path, "intercept_full_agent_{}.mp4".format(n)), 200):
-        for i in range(len(pos_trial)):
+        for i in tqdm(range(len(pos_trial))):
             # back position
             x = pos_trial[i, 0]
             y = pos_trial[i, 1]
@@ -225,9 +235,12 @@ def animate_trajectory(record, n, path):
             s_pos = s_pos_trial[i, :]
             line_s.set_data(s_pos[0], s_pos[1])
             maxU = np.argmax(uQ_trial[i])
+            prev_obv = np.squeeze(prev_obv_trial[i])
             text2.set_text('Go straight: %.2f' % uQ_trial[i, 0])
             text1.set_text('Go left: %.2f' % uQ_trial[i, 1])
             text3.set_text('Go right: %.2f' % uQ_trial[i, 2])
+            text4.set_text('Approach angle: %.2f' % (phi_trial[i]/np.pi*180))
+            text5.set_text("Previous observation: " + OBV_BOTH_DICT[int(prev_obv)])
             text2.set_color('red' if maxU==0 else 'black')
             text1.set_color('red' if maxU==1 else 'black')
             text3.set_color('red' if maxU==2 else 'black')
@@ -235,3 +248,73 @@ def animate_trajectory(record, n, path):
             writer.grab_frame()
     
     print("> Animation for agent trajectory saved for agent #{}.".format(n))
+
+
+def create_heatmap(matrix, path, color_bar=True):
+    print("> Creating states distribution plot...")
+    plt.rc("text", usetex=True)
+    f, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(4, 7))
+    ax1.set_title('Go Straight', fontsize=7, loc='left')
+    ax2.set_title('Go Left', fontsize=7, loc='left')
+    ax3.set_title('Go Right', fontsize=7, loc='left')
+
+    if np.shape(matrix)[1] == 9:
+        x_labels = [r"$s_{t-1}^{dntn}$", r"$s_{t-1}^{dntt}$", r"$s_{t-1}^{dnta}$",
+                    r"$s_{t-1}^{dctn}$", r"$s_{t-1}^{dctt}$", r"$s_{t-1}^{dcta}$",
+                    r"$s_{t-1}^{dftn}$", r"$s_{t-1}^{dftt}$", r"$s_{t-1}^{dfta}$"]
+        y_labels = [r"$s_{t}^{dntn}$", r"$s_{t}^{dntt}$", r"$s_{t}^{dnta}$",
+                    r"$s_{t}^{dctn}$", r"$s_{t}^{dctt}$", r"$s_{t}^{dcta}$",
+                    r"$s_{t}^{dftn}$", r"$s_{t}^{dftt}$", r"$s_{t}^{dfta}$"]
+    elif np.shape(matrix)[1] == 3:
+        x_labels = [r"$s_{t-1}^{none}$", r"$s_{t-1}^{closer}$", r"$s_{t-1}^{farther}$"]
+        y_labels = [r"$s_{t}^{none}$", r"$s_{t}^{closer}$", r"$s_{t}^{farther}$"]
+    
+    g1 = sns.heatmap(
+        matrix[0, :, :] * 100,
+        cmap="OrRd",
+        ax=ax1,
+        vmin=0.0,
+        vmax=30.0,
+        linewidth=2,
+        annot=True,
+        fmt='.1f',
+        xticklabels=x_labels,
+        yticklabels=y_labels,
+        cbar=color_bar,
+    )
+    g2 = sns.heatmap(
+        matrix[1, :, :] * 100,
+        cmap="OrRd",
+        ax=ax2,
+        vmin=0.0,
+        vmax=30.0,
+        linewidth=2,
+        annot=True,
+        fmt='.1f',
+        xticklabels=x_labels,
+        yticklabels=y_labels,
+        cbar=color_bar,
+    )
+    g3 = sns.heatmap(
+        matrix[2, :, :] * 100,
+        cmap="OrRd",
+        ax=ax3,
+        vmin=0.0,
+        vmax=30.0,
+        linewidth=2,
+        annot=True,
+        fmt='.1f',
+        xticklabels=x_labels,
+        yticklabels=y_labels,
+        cbar=color_bar,
+    )
+    g1.set_yticklabels(g1.get_yticklabels(), rotation=0, fontsize=6)
+    g1.set_xticklabels(g1.get_xticklabels(), rotation=0, fontsize=6)
+    g2.set_yticklabels(g2.get_yticklabels(), rotation=0, fontsize=6)
+    g2.set_xticklabels(g2.get_xticklabels(), rotation=0, fontsize=6)
+    g3.set_yticklabels(g3.get_yticklabels(), rotation=0, fontsize=6)
+    g3.set_xticklabels(g3.get_xticklabels(), rotation=0, fontsize=6)
+    
+    f.tight_layout()
+    f.savefig(os.path.join(path, "states_dist.pdf"), dpi=400, bbox_inches="tight")
+    print("> Saved states distribution plot.")

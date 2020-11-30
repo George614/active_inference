@@ -81,7 +81,7 @@ class Environment(object):
                 o = TURN_NONE
                 
         elif self.representation == CHANGE_BOTH:
-            if np.abs(prev_angle - self.phi) <= self.granularity:
+            if np.abs(prev_angle - self.phi) < self.granularity * 0.7:
                 o_angle = TURN_NONE
             else:
                 if prev_angle > self.phi:

@@ -18,7 +18,7 @@ import core
 import animate_energy_plots as apt
 from core.config import *
 
-TRAIN_STEPS = 2000
+TRAIN_STEPS = 5000
 TEST_STEPS = 0
 N_AGENTS = 1
 
@@ -28,7 +28,7 @@ pathlist = os.getcwd().split(os.sep)
 path = os.path.join(pathlist[0], os.sep, *pathlist[1:-1], "data", CHANGE_DICT[OBV_OPTION])
 if CONTINUAL_LEARNING and TEST_STEPS<=0:
     # path = path + "_continual_learning_circle"
-    path = path + "_continual_learning_rhombus"
+    path = path + "_continual_learning_rhombus_cone"
 elif CONTINUAL_LEARNING and TEST_STEPS>0:
     path = path + "_shut_learning"
 if not os.path.isdir(path):
@@ -72,6 +72,12 @@ if __name__ == "__main__":
     epis_records = [agent[2] for agent in results]
     rand_records = [agent[3] for agent in results]
     run_time = [full_record["runtime"] for full_record in full_records] # runtime for full agents across trials
+    ## create a heapmap from ensembled states distributions of all agents  ##
+    states_dists = [full_record["states_dist"] for full_record in full_records]
+    states_sum = np.sum(np.stack(states_dists, axis=0), axis=0)
+    states_dist = states_sum / np.sum(states_sum)
+    states_dist = np.round(states_dist, 3)
+    apt.create_heatmap(states_dist, path)
     
     ## Calculate and visualize statistics of steps needed per episode for ##
     ## agents to reach the goal ##
@@ -93,5 +99,6 @@ if __name__ == "__main__":
     np.save(os.path.join(path, "inst_records.npy"), np.stack(inst_records))
     np.save(os.path.join(path, "epis_records.npy"), np.stack(epis_records))
     np.save(os.path.join(path, "rand_records.npy"), np.stack(rand_records))
+    print("> All data saved in " + path)
     runtime_avg_scaled = np.mean(run_time) / TRAIN_STEPS * 1000
     print("> Finished all experiments with scaled-average runtime ", runtime_avg_scaled)
