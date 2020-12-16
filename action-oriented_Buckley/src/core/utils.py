@@ -12,9 +12,10 @@ def get_mdp(agent_id, reverse_prior=False):
         c[PRIOR_ID] = 1
     elif OBV_OPTION == CHANGE_BOTH:
         # hand-crafted prior for the interception task with both observations
-        c = np.asarray([[0, 0, 0, 8, 4, 0, -1, 0, -2]])
+        # c = np.asarray([[0, 0, 0, 8, 4, 0, -1, 0, -2]])
+        c = np.asarray([[0, 0, 0, 0, 1, 0, 0, 0, 0]])
         c = c.T
-        c = MDP.softmax(c)
+        # c = MDP.softmax(c)
 
     kwargs = {}
     if agent_id == FULL_ID:

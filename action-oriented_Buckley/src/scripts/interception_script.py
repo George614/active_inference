@@ -20,7 +20,7 @@ from core.config import *
 
 TRAIN_STEPS = 5000
 TEST_STEPS = 0
-N_AGENTS = 1
+N_AGENTS = 5
 
 
 ## handle path and create folder if necessary
@@ -28,7 +28,7 @@ pathlist = os.getcwd().split(os.sep)
 path = os.path.join(pathlist[0], os.sep, *pathlist[1:-1], "data", CHANGE_DICT[OBV_OPTION])
 if CONTINUAL_LEARNING and TEST_STEPS<=0:
     # path = path + "_continual_learning_circle"
-    path = path + "_continual_learning_rhombus_cone"
+    path = path + "_continual_learning_rhombus_obstacle_old_prior_lr_{}".format(LR)
 elif CONTINUAL_LEARNING and TEST_STEPS>0:
     path = path + "_shut_learning"
 if not os.path.isdir(path):
@@ -81,18 +81,21 @@ if __name__ == "__main__":
     
     ## Calculate and visualize statistics of steps needed per episode for ##
     ## agents to reach the goal ##
-    # episode_steps_full = [full_record["steps_episode"] for full_record in full_records]
-    # episode_steps_inst = [inst_record["steps_episode"] for inst_record in inst_records]
-    # episode_steps_epis = [epis_record["steps_episode"] for epis_record in epis_records]
-    # len_full = [len(steps) for steps in episode_steps_full]
-    # steps_arr_full = [steps[:min(len_full)] for steps in episode_steps_full]
-    # steps_arr_full = np.asarray(steps_arr_full)
-    # mean_full = np.mean(steps_arr_full, axis=0)
-    # std_full = np.std(steps_arr_full, axis=0)
-    # plt.errorbar(np.arange(1, min(len_full)+1), mean_full, std_full, linestyle='None', marker='^')
-    # plt.xlabel("Current episode")
-    # plt.ylabel("Steps")
-    # plt.show()
+    episode_steps_full = [full_record["steps_episode"] for full_record in full_records]
+    episode_steps_inst = [inst_record["steps_episode"] for inst_record in inst_records]
+    episode_steps_epis = [epis_record["steps_episode"] for epis_record in epis_records]
+    len_full = [len(steps) for steps in episode_steps_full]
+    steps_arr_full = [steps[:min(len_full)] for steps in episode_steps_full]
+    steps_arr_full = np.asarray(steps_arr_full)
+    mean_full = np.mean(steps_arr_full, axis=0)
+    std_full = np.std(steps_arr_full, axis=0)
+    fig = plt.figure()
+    plt.errorbar(np.arange(1, min(len_full)+1), mean_full, std_full, linestyle='None', marker='^')
+    plt.xlabel("Current episode")
+    plt.ylabel("Steps")
+    plt.title("Average steps used per episode for {} agents".format(N_AGENTS))
+    fig.savefig(os.path.join(path, 'Average_steps_per_episode.pdf'), dpi=600, bbox_inches="tight")
+    print("> Average steps per episode saved in PDF.")
 
     ## save results for all agents of all types ##
     np.save(os.path.join(path, "full_records.npy"), np.stack(full_records))
