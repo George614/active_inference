@@ -43,9 +43,11 @@ def learn_record_trial(mdp, n_steps, test_steps=None, env=None, record_states=Tr
     uQ_trial = np.zeros((n_steps + test_steps, N_CONTROL))  # probabilities for all control states
     pos_trial = np.zeros((n_steps + test_steps, 2))  # agent's position
     s_pos_trial = np.zeros((n_steps + test_steps, 2))  # source position
+    obst_pos_trial = np.zeros((n_steps + test_steps, 2))  # obstacle position
     theta_trial = np.zeros((n_steps + test_steps, 1))  # agent's orientation in the environment
     phi_trial = np.zeros((n_steps + test_steps, 1))   # agent's approach angle to the target
     prev_obv_trial = np.zeros((n_steps + test_steps, 1))  # previous observation
+    cur_obv_trial = np.zeros((n_steps + test_steps, 1))  # current observation
 
     time_start = time.perf_counter()
 
@@ -67,9 +69,11 @@ def learn_record_trial(mdp, n_steps, test_steps=None, env=None, record_states=Tr
         uQ_trial[step, :] = np.squeeze(mdp.uQ[:])
         pos_trial[step, :] = env.pos[:]
         s_pos_trial[step, :] = env.s_pos[:]
+        obst_pos_trial[step, :] = env.obst_pos[:]
         theta_trial[step, :] = env.theta
         phi_trial[step, :] = env.phi
         prev_obv_trial[step, :] = prev_obv
+        cur_obv_trial[step, :] = obv
         # if np.argmax(mdp.uQ[:]) != mdp.action:
         # print("action {}, max uQ {}".format(mdp.action, np.argmax(mdp.uQ)))
         if record_states:
@@ -83,9 +87,11 @@ def learn_record_trial(mdp, n_steps, test_steps=None, env=None, record_states=Tr
                     "uQ" : uQ_trial,
                     "position" : pos_trial,
                     "s_pos" : s_pos_trial,
+                    "obst_pos" : obst_pos_trial,
                     "orientation" : theta_trial,
                     "approach_angle" : phi_trial,
                     "prev_obv" : prev_obv_trial,
+                    "cur_obv" : cur_obv_trial,
                     "runtime" : time_trial,
                     "fully_trained" : False,
                     "steps_episode" : env.steps_episode,

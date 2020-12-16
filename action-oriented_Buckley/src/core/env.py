@@ -24,9 +24,8 @@ class Environment(object):
         self.representation = representation
 
         self.pos = [self.env_size/2, self.env_size/2]
-        self.s_pos = None
-        self.s1_pos = None  # added
-        self.s2_pos = None  # added
+        self.s_pos = None  # target position
+        self.obst_pos = None  # obstacle position
         self.theta = None  # agent's orientation
         self.phi = None  # approach angle
         self.step_count = None  # time steps used so far
@@ -36,6 +35,14 @@ class Environment(object):
                             [self.env_size-2*self.source_size, self.env_size/2],
                             [self.env_size/2, 2*self.source_size],
                             [2*self.source_size, self.env_size/2]]
+        self.obstacle_list = [[0.5*(self.s_pos_list[0][0]+self.s_pos_list[1][0]),
+                              0.5*(self.s_pos_list[0][1]+self.s_pos_list[1][1])],
+                              [0.5*(self.s_pos_list[1][0]+self.s_pos_list[2][0]),
+                              0.5*(self.s_pos_list[1][1]+self.s_pos_list[2][1])],
+                              [0.5*(self.s_pos_list[2][0]+self.s_pos_list[3][0]),
+                              0.5*(self.s_pos_list[2][1]+self.s_pos_list[3][1])],
+                              [0.5*(self.s_pos_list[0][0]+self.s_pos_list[3][0]),
+                              0.5*(self.s_pos_list[0][1]+self.s_pos_list[3][1])]]
         self.reset()
 
     def reset(self):
@@ -45,8 +52,10 @@ class Environment(object):
         # fy = self.env_size / 2 + (self.init_distance * np.sin(rand_loc))
         # self.pos = [fx, fy]  # positon of the back end of the chemotaxis/agent
         self.s_pos = self.s_pos_list[self.episode_count % len(self.s_pos_list)] # source position
+        self.obst_pos = self.obstacle_list[(self.episode_count-1) % len(self.obstacle_list)]
         if self.episode_count == 0:
             self.theta = np.random.rand() * (2 * np.pi)  # orientation of the agent
+            # self.obst_pos = None
         vec_agent_to_source = self.vec_norm(np.asarray(self.s_pos) - np.asarray(self.pos))
         vec_agent_heading = np.asarray([np.cos(self.theta), np.sin(self.theta)])
         self.phi = np.arccos(np.dot(vec_agent_to_source, vec_agent_heading))
@@ -81,7 +90,7 @@ class Environment(object):
                 o = TURN_NONE
                 
         elif self.representation == CHANGE_BOTH:
-            if np.abs(prev_angle - self.phi) < self.granularity * 0.7:
+            if prev_angle == self.phi:
                 o_angle = TURN_NONE
             else:
                 if prev_angle > self.phi:
@@ -120,7 +129,7 @@ class Environment(object):
                 self.theta -= self.granularity
             self.pos[0] += self.vel * np.cos(self.theta)
             self.pos[1] += self.vel * np.sin(self.theta)
-            self.check_bounds()
+            self.check_bounds(prev_pos)
             self.step_count += 1
         else:
             if CONTINUAL_LEARNING:
@@ -134,7 +143,7 @@ class Environment(object):
         ''' Distance between the agent and the source '''
         return self.dis(self.pos[0], self.pos[1], self.s_pos[0], self.s_pos[1])
 
-    def check_bounds(self):
+    def check_bounds(self, prev_pos):
         if self.pos[0] > self.env_size:
             self.pos[0] = self.env_size
         if self.pos[0] < 0:
@@ -143,6 +152,8 @@ class Environment(object):
             self.pos[1] = self.env_size
         if self.pos[1] < 0:
             self.pos[1] = 0
+        if self.dis(self.pos[0], self.pos[1], self.obst_pos[0], self.obst_pos[1]) <= OBSTACLE_SIZE:
+            self.pos[:] = prev_pos[:]
 
     @staticmethod
     def dis(x1, y1, x2, y2):

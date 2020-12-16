@@ -197,21 +197,25 @@ def animate_trajectory(record, n, path):
     
     pos_trial = record['position']
     s_pos_trial = record['s_pos']
+    obst_pos_trial = record['obst_pos']
     theta_trial = record['orientation'].squeeze()
     uQ_trial = record['uQ']
     phi_trial = record['approach_angle']
     prev_obv_trial = record['prev_obv']
+    cur_obv_trial = record['cur_obv']
     fully_trained = record["fully_trained"]
     train_steps = record["steps"]
     if fully_trained:
         pos_trial = pos_trial[train_steps:]
         theta_trial = theta_trial[train_steps:]
         s_pos_trial = s_pos_trial[train_steps:]
+        obst_pos_trial = obst_pos_trial[train_steps:]
     
     fig = plt.figure()
     line1, = plt.plot([], [], 'b-o', markersize=2)
     line2, = plt.plot([], [], 'k-D', markersize=2)
     line_s, = plt.plot([], [], 'yo', markersize=SOURCE_SIZE, alpha=0.2)
+    line_o, = plt.plot([], [], 'go', markersize=OBSTACLE_SIZE, alpha=0.2)
     text1 = plt.text(0, 510, '', fontsize='small')
     text2 = plt.text(90, 510, '', fontsize='small')
     text3 = plt.text(200, 510, '', fontsize='small')
@@ -233,14 +237,17 @@ def animate_trajectory(record, n, path):
             line2.set_data(fx, fy)
             # source position
             s_pos = s_pos_trial[i, :]
+            obst_pos = obst_pos_trial[i, :]
             line_s.set_data(s_pos[0], s_pos[1])
+            line_o.set_data(obst_pos[0], obst_pos[1])
             maxU = np.argmax(uQ_trial[i])
             prev_obv = np.squeeze(prev_obv_trial[i])
+            cur_obv = np.squeeze(cur_obv_trial[i])
             text2.set_text('Go straight: %.2f' % uQ_trial[i, 0])
             text1.set_text('Go left: %.2f' % uQ_trial[i, 1])
             text3.set_text('Go right: %.2f' % uQ_trial[i, 2])
             text4.set_text('Approach angle: %.2f' % (phi_trial[i]/np.pi*180))
-            text5.set_text("Previous observation: " + OBV_BOTH_DICT[int(prev_obv)])
+            text5.set_text("Prev_obv/Cur_obv: " + OBV_BOTH_DICT[int(prev_obv)] + " / " + OBV_BOTH_DICT[int(cur_obv)])
             text2.set_color('red' if maxU==0 else 'black')
             text1.set_color('red' if maxU==1 else 'black')
             text3.set_color('red' if maxU==2 else 'black')
