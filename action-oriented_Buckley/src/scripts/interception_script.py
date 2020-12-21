@@ -18,17 +18,17 @@ import core
 import animate_energy_plots as apt
 from core.config import *
 
-TRAIN_STEPS = 5000
-TEST_STEPS = 0
-N_AGENTS = 5
-
+TRAIN_STEPS = 50000
+TEST_STEPS = 5000
+N_AGENTS = 1
+DEBUG = False
 
 ## handle path and create folder if necessary
 pathlist = os.getcwd().split(os.sep)
 path = os.path.join(pathlist[0], os.sep, *pathlist[1:-1], "data", CHANGE_DICT[OBV_OPTION])
 if CONTINUAL_LEARNING and TEST_STEPS<=0:
     # path = path + "_continual_learning_circle"
-    path = path + "_continual_learning_rhombus_obstacle_old_prior_lr_{}".format(LR)
+    path = path + "_continual_learning_rhombus_obstacle_new_prior_lr_{}".format(LR)
 elif CONTINUAL_LEARNING and TEST_STEPS>0:
     path = path + "_shut_learning"
 if not os.path.isdir(path):
@@ -61,11 +61,14 @@ def run_exp_parallel(n):
 
 if __name__ == "__main__":
     print("Starting experiments with {} as observation, training {} agents...".format(CHANGE_DICT[OBV_OPTION], N_AGENTS))
-
-    ## run experiments using multiprocessing package for parallel computation
-    n_processes = min(N_AGENTS, os.cpu_count())
-    with Pool(processes=n_processes) as pool:
-        results = pool.map(run_exp_parallel, range(N_AGENTS))
+    
+    if DEBUG:
+        results = run_exp_parallel(0)
+    else:
+        ## run experiments using multiprocessing package for parallel computation
+        n_processes = min(N_AGENTS, os.cpu_count())
+        with Pool(processes=n_processes) as pool:
+            results = pool.map(run_exp_parallel, range(N_AGENTS))
         
     full_records = [agent[0] for agent in results]
     inst_records = [agent[1] for agent in results]
