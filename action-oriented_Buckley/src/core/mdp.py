@@ -9,7 +9,7 @@ class MDP(object):
         self.C = c  # prior preference / goal  (N_OBS, 1)
 
         self.alpha = alpha  # instrumental weight 
-        self.beta = beta    # epistemic weight
+        self.beta = beta    # epoliciestemic weight
         self.lr = lr        # learning rate
         self.p0 = np.exp(-16)  # epsilon to avoid numberical overflow
 
@@ -19,6 +19,8 @@ class MDP(object):
         self.Ns = self.A.shape[1]  # number of hidden states
         self.No = self.A.shape[0]  # number of observations
         self.Nu = self.B.shape[0]  # number of control states
+        self.Npi = 3  # number of policies
+        self.H = 3  # horizon length
 
         self.A = self.A + self.p0
         self.A = self.normdist(self.A)
@@ -39,8 +41,13 @@ class MDP(object):
         self.sQ = np.zeros([self.Ns, 1])
         self.uQ = np.zeros([self.Nu, 1])
         self.EFE = np.zeros([self.Nu, 1])
+        self.all_EFE = np.zeros([self.Npi, self.H, 1])
         self.utility = np.zeros([self.Nu, 1])
         self.surprise = np.zeros([self.Nu, 1])
+
+        self.all_sQ = np.zeros([self.Npi, self.H, self.Ns])
+        self.all_obv = np.zeros([self.Npi, self.H], dtype=int)
+        self.policies = np.zeros([self.Npi, self.H])
 
         self.action_range = np.arange(0, self.Nu)
         self.obv = 0
@@ -72,7 +79,7 @@ class MDP(object):
         self.EFE = np.zeros([self.Nu, 1])
 
         for u in range(self.Nu):
-            fs = np.dot(self.B[u], self.sQ)  # phy_s_tau in equation 18
+            fs = np.dot(self.B[u], self.sQ)  # phi_s_tau in equation 18
             fo = np.dot(self.A, fs)          # phi_o in equation 16
             fo = self.normdist(fo + self.p0)
 
@@ -80,7 +87,7 @@ class MDP(object):
             utility = (np.sum(fo * np.log(fo / self.C), axis=0)) * self.alpha
             utility = utility[0]
             
-            # parameter epistemic value, equation 15 and 18
+            # parameter epoliciestemic value, equation 15 and 18
             surprise = self.bayesian_surprise(u, fs) * self.beta
 
             self.utility[u] = -utility
@@ -101,6 +108,84 @@ class MDP(object):
         self.B[action] = self.normdist(b)
         self.calc_wb()
 
+    ### MDP for a horizon of future steps ###
+
+    def step_horizon(self, obv):
+        self.obv = obv
+        self.policies = np.random.choice(self.Nu, size=(self.Npi, self.H))
+        self.policies[:, 0] = np.arange(self.Nu, dtype=int)
+        for t in range(self.H):
+            if t==0:
+                vec_obv = np.repeat(obv, self.Npi)
+            self.infer_sQ_horizon(vec_obv, t)
+            vec_obv = self.evaluate_efe_horizon(t)
+            self.all_obv[:, t] = np.squeeze(vec_obv)
+        self.infer_uQ_horizon()
+        return self.act()
+
+    def infer_sQ_horizon(self, vec_obv, t):
+        '''
+        vec_obv: observation of current time step for all policies
+        t: current time step, least value should be 1 (start with the second step)
+        '''
+        if t==0:  # use the actual values from previous time step
+            mat_sQ = np.repeat(np.swapaxes(self.sQ, 0, 1), self.Npi, axis=0)
+            vec_u_prev = np.repeat(self.action, self.Npi)
+        else:
+            # mat_sQ: hidden state parameter phi_s from last time step for all policies
+            mat_sQ = self.all_sQ[:, t-1, :]
+            # previous control state for all policies
+            vec_u_prev = self.policies[:, t-1]
+        for pi_i, u in enumerate(vec_u_prev):
+            likelihood = self.lnA[int(vec_obv[pi_i]), :]  # lnP(o_t|s_t, lambda)
+            likelihood = likelihood[:, np.newaxis]
+            prior = np.dot(self.B[u], np.expand_dims(mat_sQ[pi_i, :], axis=1)) # lnP(s_t|s_t-1, u_t-1, theta) in equation 11
+            prior = np.log(prior)
+            self.all_sQ[pi_i, t, :] = np.squeeze(self.softmax(likelihood + prior))
+
+    def evaluate_efe_horizon(self, t):
+        ''' evaluate EFE value for all policies at one step '''
+        EFE = np.zeros([self.Npi, 1])
+        o_hat = np.zeros([self.Npi,])
+        # action (control state) to be evaluated at current time step
+        vec_u_t = self.policies[:, t]
+
+        for pi_i, u in enumerate(vec_u_t):
+            fs = np.dot(self.B[u], np.expand_dims(self.all_sQ[pi_i, t, :], axis=1))  # phi_s_tau in equation 18
+            fo = np.dot(self.A, fs)          # phi_o in equation 16
+            fo = self.normdist(fo + self.p0)
+            o_hat[pi_i] = np.argmax(fo)
+
+            # instrumental value E_Q(o)[lnP(o)], equation 16?
+            utility = (np.sum(fo * np.log(fo / self.C), axis=0)) * self.alpha
+            utility = utility[0]
+            
+            # parameter epoliciestemic value, equation 15 and 18
+            surprise = self.bayesian_surprise(u, fs) * self.beta
+
+            # equation 15 and 18
+            EFE[pi_i] = surprise - utility
+            
+        self.all_EFE[:, t, :] = EFE[:, :]
+        return o_hat
+
+    def infer_uQ_horizon(self):
+        self.uQ = self.softmax(np.sum(self.all_EFE, axis=1))
+
+    def update_horizon(self, new, previous):
+        policy_ID = self.action  # works only if setting #policies equals to #actions
+        for t in range(self.H):
+            action = self.policies[policy_ID, t]
+            if t==0:
+                self.Ba[action, self.all_obv[policy_ID, t], previous] += self.lr  # equation 13
+            elif t==self.H-1:
+                self.Ba[action, new, self.all_obv[policy_ID, t-1]] += self.lr
+            else:
+                self.Ba[action, self.all_obv[policy_ID, t], self.all_obv[policy_ID, t-1]] += self.lr
+            b = np.copy(self.Ba[action])
+            self.B[action] = self.normdist(b)
+        self.calc_wb()
+    
     # not used
     def calc_expectation(self):
         for u in range(self.Nu):
@@ -132,10 +217,12 @@ class MDP(object):
     def bayesian_surprise(self, u, fs):
         surprise = 0
         wb = self.wB[u, :, :]
-        for st in range(self.Ns):  # s_tau
-            for s in range(self.Ns):  # s_t
-                surprise += fs[st] * wb[st, s] * self.sQ[s]  # equation 18 first half
-        return -surprise
+        # for st in range(self.Ns):  # s_tau
+        #     for s in range(self.Ns):  # s_t
+        #         surprise += fs[st] * wb[st, s] * self.sQ[s]  # equation 18 first half
+        # this is a faster implementation
+        surprise = np.dot(np.swapaxes(fs, 0, 1), np.dot(wb, self.sQ))
+        return np.squeeze(-surprise)
 
     def predict_obv(self, action, obv):
         _obv = np.zeros([2, 1]) + self.p0
