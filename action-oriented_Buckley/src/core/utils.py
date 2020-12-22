@@ -16,6 +16,13 @@ def get_mdp(agent_id, reverse_prior=False):
         # c = np.asarray([[0, 0, 0, 0, 1, 0, 0, 0, 0]])
         c = c.T
         c = MDP.softmax(c)
+    elif OBV_OPTION == DISCRETE_BOTH:
+        c = np.asarray([[0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 8, 2, 0, 0, 0,
+                         0, 0, 0, 0, 0, 2, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0]])
+        c = c.T
+        c = MDP.softmax(c)
 
     kwargs = {}
     if agent_id == FULL_ID:

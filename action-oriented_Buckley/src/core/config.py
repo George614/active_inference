@@ -22,33 +22,47 @@ AGENT_SIZE = 5
 VELOCITY = 1
 GRANULARITY = 30/180*np.pi
 
-# TUMBLE = 0
-# RUN = 1
-# NEG_GRADIENT = 0
-# POS_GRADIENT = 1
-
 CHANGE_DISTANCE = 0
 CHANGE_ANGLE = 1
 CHANGE_BOTH = 2
+DISCRETE_BOTH = 3
 
-CHANGE_DICT = {0 : "change_of_distance", 1 : "change_of_apporach_angle", 2 : "change_of_both"}
+CHANGE_DICT = {0 : "change_of_distance", 1 : "change_of_apporach_angle",
+			   2 : "change_of_both", 3 : "discretized_both"}
+
 # select the representation of observation / hidden state before running any experiments
-OBV_OPTION = CHANGE_BOTH
+OBV_OPTION = DISCRETE_BOTH
 
-# action/control ID
+## action/control ID ##
 GO_STRAIGHT = 0
 GO_LEFT = 1
 GO_RIGHT = 2
 
-# Obsercation/state ID
-CHANGE_NONE = 0
-CHANGE_CLOSER = 1
-CHANGE_FARTHER = 2
+# discretized action/control space
+GO_STRAIGHT = 0
+GO_LEFT_1125 = 1
+GO_LEFT_225 = 2
+GO_LEFT_45 = 3
+GO_LEFT_90 = 4
+GO_LEFT_180 = 5
+GO_RIGHT_90 = 6
+GO_RIGHT_45 = 7
+GO_RIGHT_225 = 8
+GO_RIGHT_1125 = 9
 
+## Obsercation/state ID ##
+
+# only with change of distance
+DIS_NONE = 0
+DIS_CLOSER = 1
+DIS_FARTHER = 2
+
+# only with change of approach angle
 TURN_NONE = 0
 TURN_TOWARDS = 1
 TURN_AWAY = 2
 
+# change of distance and change of approach angle
 DIS_NONE_TURN_NONE = 0
 DIS_NONE_TURN_TOWARDS = 1
 DIS_NONE_TURN_AWAY = 2
@@ -59,9 +73,51 @@ DIS_FARTHER_TURN_NONE = 6
 DIS_FARTHER_TURN_TOWARDS = 7
 DIS_FARTHER_TURN_AWAY = 8
 
+# change of distance and discretized approach angle
+DNTN = 0
+DNTL11 = 1
+DNTL22 = 2
+DNTL45 = 3
+DNTL90 = 4
+DNTL180 = 5
+DNTR180 = 6
+DNTR90 = 7
+DNTR45 = 8
+DNTR22 = 9
+DNTR11 = 10
+DCTN = 11
+DCTL11 = 12
+DCTL22 = 13
+DCTL45 = 14
+DCTL90 = 15
+DCTL180 = 16
+DCTR180 = 17
+DCTR90 = 18
+DCTR45 = 19
+DCTR22 = 20
+DCTR11 = 21
+DFTN = 22
+DFTL11 = 23
+DFTL22 = 24
+DFTL45 = 25
+DFTL90 = 26
+DFTL180 = 27
+DFTR180 = 28
+DFTR90 = 29
+DFTR45 = 30
+DFTR22 = 31
+DFTR11 = 32
+
 OBV_BOTH_DICT = {0 : "DIS_NONE_TURN_NONE", 1 : "DIS_NONE_TURN_TOWARDS", 2 : "DIS_NONE_TURN_AWAY",
 				3 : "DIS_CLOSER_TURN_NONE", 4 : "DIS_CLOSER_TURN_TOWARDS", 5 : "DIS_CLOSER_TURN_AWAY",
 				6 : "DIS_FARTHER_TURN_NONE", 7 : "DIS_FARTHER_TURN_TOWARDS", 8 : "DIS_FARTHER_TURN_AWAY"}
+
+OBV_DISCRETE_ARRAY = ["DNTN", "DNTL11", "DNTL22", "DNTL45", "DNTL90", "DNTL180", "DNTR180",
+					  "DNTR90", "DNTR45", "DNTR22", "DNTR11", "DCTN", "DCTL11",
+					  "DCTL22", "DCTL45", "DCTL90",  "DCTL180", "DCTR180", "DCTR90", "DCTR45",
+					  "DCTR22", "DCTR11", "DFTN", "DFTL11", "DFTL22", "DFTL45",
+					  "DFTL90", "DFTL180", "DFTR180", "DFTR90", "DFTR45",  "DFTR22", "DFTR11"]
+
 ##############################
 #       Agent config        #
 ##############################
@@ -90,6 +146,11 @@ elif OBV_OPTION == CHANGE_BOTH:
 	N_STATES = 9
 	N_DISTRIBUTIONS = 27
 	PRIOR_ID = 3
+elif OBV_OPTION == DISCRETE_BOTH:
+	N_OBS = 33
+	N_CONTROL = 10
+	N_STATES = 33
+	N_DISTRIBUTIONS = 330
 else:
 	raise ValueError("Incorrect choise of observation/hidden state representation.")
 

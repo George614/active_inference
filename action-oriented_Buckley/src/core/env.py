@@ -65,21 +65,21 @@ class Environment(object):
 
     def observe(self, prev_pos=None, prev_angle=None):
         ''' Calcuate the change of distance / approach angle '''
-        if self.representation == CHANGE_DISTANCE or self.representation == CHANGE_BOTH:
+        if self.representation != CHANGE_ANGLE:
             prev_dis = self.dis(prev_pos[0], prev_pos[1], self.s_pos[0], self.s_pos[1])
             cur_dis = self.dis(self.pos[0], self.pos[1], self.s_pos[0], self.s_pos[1])
-        if self.representation == CHANGE_ANGLE or self.representation == CHANGE_BOTH:
+        if self.representation != CHANGE_DISTANCE:
             vec_agent_to_source = self.vec_norm(np.asarray(self.s_pos) - np.asarray(self.pos))
             vec_agent_heading = np.asarray([np.cos(self.theta), np.sin(self.theta)])
             self.phi = np.arccos(np.dot(vec_agent_to_source, vec_agent_heading))
         # get the observation based on representation of choice
         if self.representation == CHANGE_DISTANCE:
             if prev_dis > cur_dis:
-                o = CHANGE_CLOSER
+                o = DIS_CLOSER
             elif prev_dis < cur_dis:
-                o = CHANGE_FARTHER
+                o = DIS_FARTHER
             else:
-                o = CHANGE_NONE
+                o = DIS_NONE
         
         elif self.representation == CHANGE_ANGLE:
             if prev_angle > self.phi:
@@ -116,6 +116,79 @@ class Environment(object):
                 o = DIS_NONE_TURN_AWAY
             elif prev_dis == cur_dis and o_angle == TURN_NONE:
                 o = DIS_NONE_TURN_NONE
+
+        elif self.representation == DISCRETE_BOTH:
+            angle_change = self.phi - prev_angle
+            if prev_dis > cur_dis:
+                if angle_change == 0:
+                    o = DCTN
+                elif angle_change>0 and angle_change<=11.25/180*np.pi:
+                    o = DCTL11
+                elif angle_change>11.25/180*np.pi and angle_change<=22.5/180*np.pi:
+                    o = DCTL22
+                elif angle_change>22.5/180*np.pi and angle_change<=45/180*np.pi:
+                    o = DCTL45
+                elif angle_change>45/180*np.pi and angle_change<=90/180*np.pi:
+                    o = DCTL90
+                elif angle_change>90/180*np.pi:
+                    o = DCTL180
+                elif angle_change<0 and angle_change>= -11.25/180*np.pi:
+                    o = DCTR11
+                elif angle_change<-11.25/180*np.pi and angle_change>=-22.5/180*np.pi:
+                    o = DCTR22
+                elif angle_change<-22.5/180*np.pi and angle_change>=-45/180*np.pi:
+                    o = DCTR45
+                elif angle_change<-45/180*np.pi and angle_change>=-90/180*np.pi:
+                    o = DCTR90
+                elif angle_change<-90/180*np.pi:
+                    o = DCTR180
+            elif prev_dis < cur_dis:
+                if angle_change == 0:
+                    o = DFTN
+                elif angle_change>0 and angle_change<=11.25/180*np.pi:
+                    o = DFTL11
+                elif angle_change>11.25/180*np.pi and angle_change<=22.5/180*np.pi:
+                    o = DFTL22
+                elif angle_change>22.5/180*np.pi and angle_change<=45/180*np.pi:
+                    o = DFTL45
+                elif angle_change>45/180*np.pi and angle_change<=90/180*np.pi:
+                    o = DFTL90
+                elif angle_change>90/180*np.pi:
+                    o = DFTL180
+                elif angle_change<0 and angle_change>= -11.25/180*np.pi:
+                    o = DFTR11
+                elif angle_change<-11.25/180*np.pi and angle_change>=-22.5/180*np.pi:
+                    o = DFTR22
+                elif angle_change<-22.5/180*np.pi and angle_change>=-45/180*np.pi:
+                    o = DFTR45
+                elif angle_change<-45/180*np.pi and angle_change>=-90/180*np.pi:
+                    o = DFTR90
+                elif angle_change<-90/180*np.pi:
+                    o = DFTR180
+            else:
+                if angle_change == 0:
+                    o = DNTN
+                elif angle_change>0 and angle_change<=11.25/180*np.pi:
+                    o = DNTL11
+                elif angle_change>11.25/180*np.pi and angle_change<=22.5/180*np.pi:
+                    o = DNTL22
+                elif angle_change>22.5/180*np.pi and angle_change<=45/180*np.pi:
+                    o = DNTL45
+                elif angle_change>45/180*np.pi and angle_change<=90/180*np.pi:
+                    o = DNTL90
+                elif angle_change>90/180*np.pi:
+                    o = DNTL180
+                elif angle_change<0 and angle_change>= -11.25/180*np.pi:
+                    o = DNTR11
+                elif angle_change<-11.25/180*np.pi and angle_change>=-22.5/180*np.pi:
+                    o = DNTR22
+                elif angle_change<-22.5/180*np.pi and angle_change>=-45/180*np.pi:
+                    o = DNTR45
+                elif angle_change<-45/180*np.pi and angle_change>=-90/180*np.pi:
+                    o = DNTR90
+                elif angle_change<-90/180*np.pi:
+                    o = DNTR180
+
         return o
 
     def act(self, a):
@@ -123,10 +196,30 @@ class Environment(object):
         prev_pos = np.copy(self.pos)
         prev_angle = np.copy(self.phi)
         if self.distance() > self.source_size:
-            if a == GO_LEFT:
-                self.theta += self.granularity
-            elif a == GO_RIGHT:
-                self.theta -= self.granularity
+            if self.representation == DISCRETE_BOTH:
+                if a == GO_LEFT_1125:
+                    self.theta += 11.25/180*np.pi
+                elif a == GO_LEFT_225:
+                    self.theta += 22.5/180*np.pi
+                elif a == GO_LEFT_45:
+                    self.theta += 45/180*np.pi
+                elif a == GO_LEFT_90:
+                    self.theta += 90/180*np.pi
+                elif a == GO_LEFT_180:
+                    self.theta += np.pi
+                elif a == GO_RIGHT_90:
+                    self.theta -= 90/180*np.pi
+                elif a == GO_RIGHT_45:
+                    self.theta -= 45/180*np.pi
+                elif a == GO_RIGHT_225:
+                    self.theta -= 22.5/180*np.pi
+                elif a == GO_RIGHT_1125:
+                    self.theta -= 11.25/180*np.pi
+            else:
+                if a == GO_LEFT:
+                    self.theta += self.granularity
+                elif a == GO_RIGHT:
+                    self.theta -= self.granularity
             self.pos[0] += self.vel * np.cos(self.theta)
             self.pos[1] += self.vel * np.sin(self.theta)
             self.check_bounds(prev_pos)
