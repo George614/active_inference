@@ -8,10 +8,21 @@ def get_mdp(agent_id, reverse_prior=False):
     b = np.random.rand(N_CONTROL, N_STATES, N_STATES)
     c = np.zeros([N_OBS, 1])
 
-    if reverse_prior:
-        c[0] = 1
-    else:
+    if OBV_OPTION == CHANGE_DISTANCE or OBV_OPTION == CHANGE_ANGLE:
         c[PRIOR_ID] = 1
+    elif OBV_OPTION == CHANGE_BOTH:
+        # hand-crafted prior for the interception task with both observations
+        c = np.asarray([[0, 0, 4, 8, 4, 0, 0, 0, 0]])
+        # c = np.asarray([[0, 0, 0, 0, 1, 0, 0, 0, 0]])
+        c = c.T
+        c = MDP.softmax(c)
+    elif OBV_OPTION == DISCRETE_BOTH:
+        c = np.asarray([[0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 8, 2, 0, 0, 0,
+                         0, 0, 0, 0, 0, 2, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0]])
+        c = c.T
+        c = MDP.softmax(c)
 
     kwargs = {}
     if agent_id == FULL_ID:
@@ -26,7 +37,7 @@ def get_mdp(agent_id, reverse_prior=False):
     mdp = MDP(a, b, c, **kwargs)
     return mdp
 
-
+# may not be used
 def get_true_model():
     b = np.zeros([N_CONTROL, N_STATES, N_STATES])
     b[TUMBLE, :, :] = np.array([[0.5, 0.5], [0.5, 0.5]])

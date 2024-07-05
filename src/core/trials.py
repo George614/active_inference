@@ -23,33 +23,61 @@ def learn_trial(mdp, n_steps, record_states=False):
     return mdp
 
 
-def learn_record_trial(mdp, n_steps, env=None, record_states=True):
+def learn_record_trial(mdp, n_steps, test_steps=None, env=None, record_states=True):
     if env is None:
         env = Environment()
-    obv = env.observe()
+    if test_steps is not None and not CONTINUAL_LEARNING:
+        raise ValueError("Cannot run fully-trained agent without continual learning!")
+    if test_steps is None:
+        test_steps = 0
+    cur_pos = env.pos
+    cur_phi = env.phi
+    obv = env.observe(cur_pos, cur_phi)
     mdp.reset(obv)
     # record the distribution of states
     states_dist = np.zeros((N_CONTROL, N_STATES, N_STATES))
     # values of EFE for all control states throughout a trial (to be recorded)
-    EFE_trial = np.zeros((n_steps, N_CONTROL))
-    epistemic_trial = np.zeros((n_steps, N_CONTROL))
-    instrumental_trial = np.zeros((n_steps, N_CONTROL))
-    pos_trial = np.zeros((n_steps, 2))
-    theta_trial = np.zeros((n_steps, 1))
+    EFE_trial = np.zeros((n_steps + test_steps, N_CONTROL))
+    epistemic_trial = np.zeros((n_steps + test_steps, N_CONTROL))
+    instrumental_trial = np.zeros((n_steps + test_steps, N_CONTROL))
+    uQ_trial = np.zeros((n_steps + test_steps, N_CONTROL))  # probabilities for all control states
+    pos_trial = np.zeros((n_steps + test_steps, 2))  # agent's position
+    s_pos_trial = np.zeros((n_steps + test_steps, 2))  # source position
+    obst_pos_trial = np.zeros((n_steps + test_steps, 2))  # obstacle position
+    theta_trial = np.zeros((n_steps + test_steps, 1))  # agent's orientation in the environment
+    phi_trial = np.zeros((n_steps + test_steps, 1))   # agent's approach angle to the target
+    prev_obv_trial = np.zeros((n_steps + test_steps, 1))  # previous observation
+    cur_obv_trial = np.zeros((n_steps + test_steps, 1))  # current observation
+
     time_start = time.perf_counter()
 
-    for step in range(n_steps):
+    for step in range(n_steps + test_steps):
         # execute routine in a step
         prev_obv = obv
         action = mdp.step(obv)
+        # action = mdp.step_horizon(obv)
         obv = env.act(action)
+        # train an agent fully then turn off learning and run it
+        # if step < n_steps:
         mdp.update(action, obv, prev_obv)
+        # mdp.update_horizon(obv, prev_obv)
+        if step == n_steps:
+            env.reset()
+            mdp.reset(env.observe(env.pos, env.phi))
         # record the values
         EFE_trial[step, :] = np.squeeze(mdp.EFE[:])
         epistemic_trial[step, :] = np.squeeze(mdp.surprise[:])
         instrumental_trial[step, :] = np.squeeze(mdp.utility[:])
+        uQ_trial[step, :] = np.squeeze(mdp.uQ[:])
         pos_trial[step, :] = env.pos[:]
+        s_pos_trial[step, :] = env.s_pos[:]
+        obst_pos_trial[step, :] = env.obst_pos[:]
         theta_trial[step, :] = env.theta
+        phi_trial[step, :] = env.phi
+        prev_obv_trial[step, :] = prev_obv
+        cur_obv_trial[step, :] = obv
+        # if np.argmax(mdp.uQ[:]) != mdp.action:
+        # print("action {}, max uQ {}".format(mdp.action, np.argmax(mdp.uQ)))
         if record_states:
             states_dist[action, obv, prev_obv] += 1
     
@@ -58,11 +86,24 @@ def learn_record_trial(mdp, n_steps, env=None, record_states=True):
                     "EFE" : EFE_trial,
                     "epistemic" : epistemic_trial,
                     "instrumental" : instrumental_trial,
+                    "uQ" : uQ_trial,
                     "position" : pos_trial,
+                    "s_pos" : s_pos_trial,
+                    "obst_pos" : obst_pos_trial,
                     "orientation" : theta_trial,
-                    "runtime" : time_trial}
+                    "approach_angle" : phi_trial,
+                    "prev_obv" : prev_obv_trial,
+                    "cur_obv" : cur_obv_trial,
+                    "runtime" : time_trial,
+                    "fully_trained" : False,
+                    "steps_episode" : env.steps_episode,
+                    "B" : mdp.B,
+                    "Ba" : mdp.Ba,
+                    "wB" : mdp.wB}
     if record_states:
         record_dict["states_dist"] = states_dist
+    if test_steps > 0 and CONTINUAL_LEARNING:
+        record_dict["fully_trained"] = True
 
     return mdp, record_dict
 
